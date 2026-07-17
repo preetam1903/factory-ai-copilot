@@ -99,6 +99,16 @@ if st.button("Start Investigation"):
 
     trend = trend_agent.investigate(context)
 
+    st.subheader("Trend Facts (Debug)")
+
+    st.json(trend["trend_facts"])
+
+    st.write("Question Type:", trend["question_type"])
+    st.write("Assumption:", trend["assumption"])
+    st.write("Assessment:", trend["assessment_status"])
+    st.write("Requested Trend:", trend["requested_trend"])
+    st.write("Overall Pattern:", trend["overall_pattern"])
+
     chart = trend["chart"]
 
     fig = go.Figure()

@@ -72,6 +72,62 @@ class TrendAgent:
 
         investigation = summary.tail(investigation_weeks)
 
+        # --------------------------------------------------
+# Investigation Context
+# --------------------------------------------------
+
+        latest_week = int(summary.iloc[-1]["WEEK_NO"])
+
+        start_week = int(investigation.iloc[0]["WEEK_NO"])
+
+        analysis_start = max(
+            int(summary.iloc[0]["WEEK_NO"]),
+            start_week - 3
+        )
+
+        question = context.get(
+            "question",
+            "How has HSM production been?"
+        )
+
+        question_lower = question.lower()
+
+        if "why" in question_lower:
+
+            question_type = "Investigation"
+
+        elif "how" in question_lower:
+
+            question_type = "Performance Review"
+
+        elif "compare" in question_lower:
+
+            question_type = "Comparison"
+
+        elif "stable" in question_lower:
+
+            question_type = "Assessment"
+
+        else:
+
+            question_type = "General Review"
+
+        assumption = None
+
+        if "reduced" in question_lower:
+
+            assumption = "Production Reduced"
+
+        elif "increase" in question_lower:
+
+            assumption = "Production Increased"
+
+        analysis_window = summary[
+            summary["WEEK_NO"] >= analysis_start
+        ].copy()
+
+        ###################
+
         total_plan = investigation["PLAN_TONNAGE"].sum()
 
         total_actual = investigation["ACTUAL_TONNAGE"].sum()
@@ -96,23 +152,102 @@ class TrendAgent:
         ]
 
         # --------------------------------------------------
-        # Trend Detection
-        # --------------------------------------------------
+# Requested Period Trend
+# --------------------------------------------------
 
-        recent = summary.tail(3)
+        requested = investigation["ACTUAL_TONNAGE"]
 
-        if recent["ACTUAL_TONNAGE"].is_monotonic_decreasing:
+        if requested.is_monotonic_increasing:
 
-            trend = "Declining"
+            requested_trend = "Improving"
 
-        elif recent["ACTUAL_TONNAGE"].is_monotonic_increasing:
+        elif requested.is_monotonic_decreasing:
 
-            trend = "Improving"
+            requested_trend = "Declining"
 
         else:
 
-            trend = "Stable"
+            requested_trend = "Fluctuating"
 
+        # --------------------------------------------------
+# Overall Analysis Trend
+# --------------------------------------------------
+
+        analysis_actual = analysis_window["ACTUAL_TONNAGE"]
+
+        highest = analysis_actual.max()
+
+        lowest = analysis_actual.min()
+
+        highest_idx = analysis_actual.idxmax()
+
+        lowest_idx = analysis_actual.idxmin()
+
+        if highest_idx < lowest_idx:
+
+            overall_pattern = "Decline"
+
+        elif lowest_idx < highest_idx:
+
+            overall_pattern = "Recovery"
+
+        else:
+
+            overall_pattern = "Stable"
+
+        # --------------------------------------------------
+# Largest Week-on-Week Drop
+# --------------------------------------------------
+
+        wow = summary["ACTUAL_CHANGE_%"]
+
+        largest_drop_idx = wow.idxmin()
+
+        largest_drop = wow.min()
+
+        drop_week = int(summary.loc[largest_drop_idx, "WEEK_NO"])
+
+        # --------------------------------------------------
+# Recovery Detection
+# --------------------------------------------------
+
+        recovery = False
+
+        recovery_start = None
+
+        recent_changes = summary.tail(3)["ACTUAL_CHANGE_%"]
+
+        if (recent_changes > 0).all():
+
+            recovery = True
+
+            recovery_start = int(summary.iloc[-3]["WEEK_NO"])
+
+        # --------------------------------------------------
+# Investigation Assessment
+# --------------------------------------------------
+
+        assessment_status = "General Review"
+
+        if assumption == "Production Reduced":
+
+            if requested_trend == "Declining":
+
+                assessment_status = "Supported"
+
+            else:
+
+                assessment_status = "Not Supported"
+
+        elif assumption == "Production Increased":
+
+            if requested_trend == "Improving":
+
+                assessment_status = "Supported"
+
+            else:
+
+                assessment_status = "Not Supported"
         # --------------------------------------------------
         # Trend Start
         # --------------------------------------------------
@@ -221,6 +356,52 @@ class TrendAgent:
             confidence = "High"
 
         # --------------------------------------------------
+# Investigation Facts
+# --------------------------------------------------
+
+        trend_facts = {
+
+            "question": question,
+
+            "question_type": question_type,
+
+            "assumption": assumption,
+
+            "assessment_status": assessment_status,
+
+            "requested_period": f"Week {start_week} - Week {latest_week}",
+
+            "analysis_period": f"Week {analysis_start} - Week {latest_week}",
+
+            "requested_trend": requested_trend,
+
+            "overall_pattern": overall_pattern,
+
+            "plan_status": plan_status,
+
+            "achievement": achievement,
+
+            "production_loss": int(total_loss),
+
+            "largest_drop_week": drop_week,
+
+            "largest_drop_percent": float(largest_drop),
+
+            "recovery_detected": recovery,
+
+            "recovery_start": recovery_start,
+
+            "rolling_average_change": rolling_change,
+
+            "previous_week_change": previous_week_change,
+
+            "severity": severity,
+
+            "confidence": confidence
+
+        }
+
+        # --------------------------------------------------
         # AI Assessment
         # --------------------------------------------------
 
@@ -282,7 +463,47 @@ Recommended investigation should focus on Weeks {trend_start} to {int(latest['WE
 
         return {
 
-            "trend": trend,
+            "question": question,
+
+            "question_type": question_type,
+
+            "assumption": assumption,
+
+            "investigation_period": {
+
+                "start_week": start_week,
+
+                "end_week": latest_week
+
+            },
+
+            "analysis_period": {
+
+                "start_week": analysis_start,
+
+                "end_week": latest_week
+
+            },
+
+            "trend_facts": trend_facts,
+
+            "requested_trend": requested_trend,
+
+            "overall_pattern": overall_pattern,
+
+            "largest_drop": {
+
+                "week": drop_week,
+
+                "change": largest_drop
+
+            },
+
+            "recovery_detected": recovery,
+
+            "recovery_start": recovery_start,
+
+            "assessment_status": assessment_status,
 
             "severity": severity,
 
