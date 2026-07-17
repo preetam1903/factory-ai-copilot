@@ -250,3 +250,59 @@ class ProductionService:
         summary = summary.sort_values("WEEK_NO")
 
         return summary
+
+    # ----------------------------------------------------
+# Data Validation
+# ----------------------------------------------------
+
+    def validate_weekly_data(self):
+
+        print("\n================= DATA VALIDATION =================")
+
+        # Production summary
+        prod = (
+            self.production
+            .groupby("WEEK_NO")
+            .agg(
+                FIRST_DATE=("DATE", "min"),
+                LAST_DATE=("DATE", "max"),
+                PROD_DAYS=("DATE", "nunique"),
+                COILS=("ACTUAL_TONNAGE", "count"),
+                ACTUAL_TONNAGE=("ACTUAL_TONNAGE", "sum")
+            )
+            .reset_index()
+        )
+
+    # Plan summary
+        plan = (
+            self.daily_plan
+            .groupby("WEEK_NO")
+            .agg(
+                PLAN_DAYS=("DATE", "nunique"),
+                PLAN_TONNAGE=("PLAN_TONNAGE", "sum")
+            )
+            .reset_index()
+        )
+
+        summary = plan.merge(
+            prod,
+            on="WEEK_NO",
+            how="outer"
+        )
+
+        summary["GAP"] = (
+            summary["PLAN_TONNAGE"]
+            - summary["ACTUAL_TONNAGE"]
+        )
+
+        summary["ACHIEVEMENT_%"] = (
+            summary["ACTUAL_TONNAGE"]
+            / summary["PLAN_TONNAGE"]
+            * 100
+        ).round(2)
+
+        print(summary)
+
+        print("\n==============================================")
+
+        return summary
