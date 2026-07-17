@@ -136,3 +136,42 @@ class ProductionService:
         print("✅ Daily Plan rows :", len(self.daily_plan))
         print("✅ Weekly Plan rows :", len(self.weekly_plan))
         print("✅ Shift Report rows :", len(self.shift_report))
+
+    # ----------------------------------------------------
+# 12 Week Summary
+# ----------------------------------------------------
+
+    def get_12_week_summary(self):
+
+        weekly_actual = (
+            self.production
+            .groupby("WEEK_NO", as_index=False)
+            .agg(
+                ACTUAL_TONNAGE=("ACTUAL_TONNAGE", "sum")
+            )
+        )
+
+        weekly_plan = (
+            self.daily_plan
+            .groupby("WEEK_NO", as_index=False)
+            .agg(
+                PLAN_TONNAGE=("PLAN_TONNAGE", "sum")
+            )
+        )
+
+        summary = weekly_plan.merge(
+            weekly_actual,
+            on="WEEK_NO",
+            how="left"
+        )
+
+        summary["ACTUAL_TONNAGE"] = summary["ACTUAL_TONNAGE"].fillna(0)
+
+        summary["LOSS"] = (
+            summary["PLAN_TONNAGE"]
+            - summary["ACTUAL_TONNAGE"]
+        )
+
+        summary = summary.sort_values("WEEK_NO")
+
+        return summary
