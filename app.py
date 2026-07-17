@@ -191,22 +191,69 @@ if st.button("Start Investigation"):
         use_container_width=True
     )
 
-    c1, c2, c3 = st.columns(3)
+    st.subheader("Executive Trend Dashboard")
+
+    c1, c2, c3, c4 = st.columns(4)
 
     c1.metric(
-        "Overall Pattern",
-        trend["overall_pattern"]
+        "Achievement",
+        f"{trend['achievement']:.1f}%"
     )
 
     c2.metric(
         "Production Loss",
-        f'{trend["loss"]:,.0f} t'
+        f"{trend['loss']:,.0f} t"
     )
 
     c3.metric(
-        "Achievement",
-        f'{trend["achievement"]:.1f}%'
+        "Week-on-Week",
+        f"{trend['previous_week_change']:.1f}%"
     )
+
+    c4.metric(
+        "Rolling Avg",
+        f"{trend['rolling_average_change']:.1f}%"
+    )
+
+    st.markdown("---")
+
+    c5, c6, c7, c8 = st.columns(4)
+
+    c5.metric(
+        "Trend",
+        trend["requested_trend"]
+    )
+
+    c6.metric(
+        "Pattern",
+        trend["overall_pattern"]
+    )
+
+    c7.metric(
+        "Planning",
+        trend["plan_status"]
+    )
+
+    c8.metric(
+        "Severity",
+        trend["severity"]
+    )
+    drop = trend["largest_drop"]
+
+    st.info(
+        f"📉 Largest production deterioration occurred in Week {drop['week']} ({drop['change']:.1f}%)."
+    )
+    if trend["recovery_detected"]:
+
+        st.success(
+            f"Production recovery detected from Week {trend['recovery_start']}."
+        )
+
+    else:
+
+        st.warning(
+            "No production recovery detected."
+        )
 
     st.info(
         trend["assessment"]
