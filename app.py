@@ -161,34 +161,30 @@ This is the period selected for detailed investigation.
 
     st.markdown("---")
 
-    st.subheader("📊 Production Performance Summary")
+    st.subheader("📊 Production Performance Comparison")
 
-    st.caption(
-        f"Summary Period : {investigation['trend_window']}"
-    )
+    comparison = {
+        "KPI": [
+            "Planned Production",
+            "Actual Production",
+            "Production Loss",
+            "Achievement"
+        ],
+        investigation["trend_window"]: [
+            f"{summary['trend']['planned']:,.0f} t",
+            f"{summary['trend']['actual']:,.0f} t",
+            f"{summary['trend']['loss']:,.0f} t",
+            f"{summary['trend']['achievement']:.1f}%"
+        ],
+        investigation["investigation_window"]: [
+            f"{summary['investigation']['planned']:,.0f} t",
+            f"{summary['investigation']['actual']:,.0f} t",
+            f"{summary['investigation']['loss']:,.0f} t",
+            f"{summary['investigation']['achievement']:.1f}%"
+        ]
+    }
 
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Planned Production",
-        f"{summary['planned']:,.0f} t"
-    )
-
-    c2.metric(
-        "Actual Production",
-        f"{summary['actual']:,.0f} t"
-    )
-
-    c3.metric(
-        "Production Loss",
-        f"{summary['loss']:,.0f} t"
-    )
-
-    c4.metric(
-        "Achievement",
-        f"{summary['achievement']:.1f}%"
-    )
-
+    st.table(comparison)
     # ----------------------------------------------------------
     # Performance Overview
     # ----------------------------------------------------------
