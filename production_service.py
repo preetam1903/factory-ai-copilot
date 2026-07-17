@@ -11,9 +11,9 @@ class ProductionService:
         plan_file="PRODUCTION_PLAN.xlsx",
         shift_file="SHIFT_REPORT.xlsx",
     ):
-        self.production = pd.read_csv(Path(production_file))
-        self.plan = pd.read_csv(Path(plan_file))
-        self.shift = pd.read_csv(Path(shift_file))
+        self.production = pd.read_excel(Path(production_file))
+        self.plan = pd.read_excel(Path(plan_file))
+        self.shift = pd.read_excel(Path(shift_file))
 
         self._prepare_data()
 
