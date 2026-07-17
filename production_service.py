@@ -215,3 +215,12 @@ class ProductionService:
                 "LOSS",
             ]
         ]
+
+    if __name__ == "__main__":
+
+        service = ProductionService()
+
+        print(service.plan.head(20))
+        print(service.plan.groupby("WEEK_NO")["PLAN_TONNAGE"].sum())
+
+        print(service.production.groupby("WEEK_NO")["ACTUAL_TONNAGE"].sum())
