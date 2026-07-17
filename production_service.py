@@ -6,8 +6,8 @@ class ProductionService:
 
     def __init__(
         self,
-        production_file="COIL_OPERATION_FACT.xlsx",
-        plan_file="PRODUCTION_PLAN.xlsx",
+        production_file="COIL_OPERATION_FACT_5W.xlsx",
+        plan_file="PRODUCTION_PLAN_5W.xlsx",
         shift_file="SHIFT_REPORT.xlsx",
     ):
 
