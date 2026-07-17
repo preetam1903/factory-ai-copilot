@@ -23,6 +23,10 @@ class ProductionService:
         self.load_data()
         self.prepare_data()
 
+# Backward compatibility with existing agents
+        self.plan = self.daily_plan
+        self.shift = self.shift_report
+
     # ----------------------------------------------------
 # Last N Weeks
 # ----------------------------------------------------
