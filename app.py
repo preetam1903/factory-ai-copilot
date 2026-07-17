@@ -1,35 +1,52 @@
 import streamlit as st
 import plotly.graph_objects as go
 
-from reference_agent import ReferenceAgent
-from week_agent import WeekAgent
-from day_agent import DayAgent
-from shift_agent import ShiftAgent
-from executive_summary_agent import ExecutiveSummaryAgent
 from production_service import ProductionService
 
+from context_agent import ContextAgent
+from trend_agent import TrendAgent
+from operations_intelligence_agent import OperationsIntelligenceAgent
+from crime_scene_agent import CrimeSceneInvestigationAgent
+
+
+
+# ==========================================================
+# PAGE CONFIG
+# ==========================================================
 
 st.set_page_config(
-    page_title="Production AI Copilot",
+    page_title="AI Manufacturing Investigation Platform",
     layout="wide"
 )
 
-st.title("🏭 Production AI Copilot")
+st.title("🏭 AI Manufacturing Investigation Platform")
 
-question = st.text_input(
-    "Ask a Question",
-    value="What happened in the last 2 weeks?"
+st.caption(
+    "AI powered operational investigation and manufacturing intelligence"
 )
 
-if st.button("Investigate"):
+# ==========================================================
+# QUESTION
+# ==========================================================
 
-    # ----------------------------------------------------------
-    # Data Validation
-    # ----------------------------------------------------------
+question = st.text_input(
+    "Ask a Manufacturing Question",
+    value="Why has production reduced over the last 3 weeks?"
+)
 
-    st.header("🔍 Data Validation")
+# ==========================================================
+# START INVESTIGATION
+# ==========================================================
+
+if st.button("Start Investigation"):
 
     service = ProductionService()
+
+    # ---------------------------------------------------------
+    # DATA VALIDATION
+    # ---------------------------------------------------------
+
+    st.header("Data Validation")
 
     validation = service.validate_weekly_data()
 
@@ -38,86 +55,124 @@ if st.button("Investigate"):
         use_container_width=True
     )
 
-    # ----------------------------------------------------------
-    # Determine Investigation Window
-    # ----------------------------------------------------------
+    # ---------------------------------------------------------
+    # CONTEXT AGENT
+    # ---------------------------------------------------------
 
-    weeks = 5
+    st.markdown("---")
 
-    words = question.lower().split()
+    st.header("Step 1 : Understanding Business Context")
 
-    for word in words:
-        if word.isdigit():
-            weeks = int(word)
-            break
+    context_agent = ContextAgent()
 
-    # ----------------------------------------------------------
-    # Executive Production Reference
-    # ----------------------------------------------------------
+    context = context_agent.investigate(question)
 
-    st.header("🏭 Executive Production Reference")
+    st.success("Business context established")
 
-    reference = ReferenceAgent()
+    st.markdown(f"""
+### Business Question
 
-    ref = reference.investigate(weeks)
+{context["business_question"]}
 
-    investigation = ref["investigation"]
-    summary = ref["summary"]
-    performance = ref["performance"]
+### Objective
 
-    chart = ref["chart"].copy()
+{context["objective"]}
 
-    # ----------------------------------------------------------
-    # Trend Graph
-    # ----------------------------------------------------------
+### Trend Window
+
+{context["trend_window"]}
+
+### Requested Investigation
+
+{context["requested_window"]}
+""")
+
+    # ---------------------------------------------------------
+    # TREND AGENT
+    # ---------------------------------------------------------
+
+    st.markdown("---")
+
+    st.header("Step 2 : Production Trend Analysis")
+
+    trend_agent = TrendAgent()
+
+    trend = trend_agent.investigate(context)
+
+    chart = trend["chart"]
 
     fig = go.Figure()
 
     fig.add_trace(
+
         go.Scatter(
+
             x=chart["WEEK_NO"],
+
             y=chart["PLAN_TONNAGE"],
+
             mode="lines+markers",
+
             name="Planned Production",
+
             line=dict(width=3)
+
         )
+
     )
 
     fig.add_trace(
+
         go.Scatter(
+
             x=chart["WEEK_NO"],
+
             y=chart["ACTUAL_TONNAGE"],
+
             mode="lines+markers",
+
             name="Actual Production",
+
             line=dict(width=3)
+
         )
+
     )
 
-    highlight = chart.tail(weeks)
+    recommendation = trend["recommended_window"]
+
+    highlight = chart.tail(
+        recommendation["weeks"]
+    )
 
     fig.add_vrect(
-        x0=highlight["WEEK_NO"].min() - 0.5,
-        x1=highlight["WEEK_NO"].max() + 0.5,
-        fillcolor="yellow",
-        opacity=0.15,
-        layer="below",
-        line_width=0
-    )
 
-    fig.add_annotation(
-        x=highlight["WEEK_NO"].min(),
-        y=highlight["ACTUAL_TONNAGE"].max(),
-        text="Investigation Starts",
-        showarrow=True,
-        arrowhead=2
+        x0=highlight["WEEK_NO"].min()-0.5,
+
+        x1=highlight["WEEK_NO"].max()+0.5,
+
+        fillcolor="yellow",
+
+        opacity=0.15,
+
+        layer="below",
+
+        line_width=0
+
     )
 
     fig.update_layout(
-        title="Production Performance Trend",
-        xaxis_title="Production Week",
+
+        title="Production Trend",
+
+        xaxis_title="Week",
+
         yaxis_title="Tonnes",
+
         hovermode="x unified",
+
         height=450
+
     )
 
     st.plotly_chart(
@@ -125,212 +180,186 @@ if st.button("Investigate"):
         use_container_width=True
     )
 
-    # ----------------------------------------------------------
-    # Investigation Overview
-    # ----------------------------------------------------------
-
-    st.markdown("---")
-
-    st.subheader("📋 Investigation Overview")
-
-    st.markdown(f"""
-**Business Question**
-
-{investigation["business_question"]}
-
-**Trend Analysis Window**
-
-{investigation["trend_window"]}
-
-This period provides the historical production context used for trend analysis.
-
-**Investigation Window**
-
-{investigation["investigation_window"]}
-
-This is the period selected for detailed investigation.
-
-**Purpose**
-
-{investigation["purpose"]}
-""")
-
-    # ----------------------------------------------------------
-    # Production Performance Summary
-    # ----------------------------------------------------------
-
-    st.markdown("---")
-
-    st.subheader("📊 Production Performance Comparison")
-
-    comparison = {
-        "KPI": [
-            "Planned Production",
-            "Actual Production",
-            "Production Loss",
-            "Achievement"
-        ],
-        investigation["trend_window"]: [
-            f"{summary['trend']['planned']:,.0f} t",
-            f"{summary['trend']['actual']:,.0f} t",
-            f"{summary['trend']['loss']:,.0f} t",
-            f"{summary['trend']['achievement']:.1f}%"
-        ],
-        investigation["investigation_window"]: [
-            f"{summary['investigation']['planned']:,.0f} t",
-            f"{summary['investigation']['actual']:,.0f} t",
-            f"{summary['investigation']['loss']:,.0f} t",
-            f"{summary['investigation']['achievement']:.1f}%"
-        ]
-    }
-
-    st.table(comparison)
-    # ----------------------------------------------------------
-    # Performance Overview
-    # ----------------------------------------------------------
-
-    st.markdown("---")
-
-    st.subheader("📈 Performance Overview")
-
     c1, c2, c3 = st.columns(3)
 
     c1.metric(
-        "Best Performing Week",
-        f"Week {performance['best_week']}",
-        f"{performance['best_actual']:,.0f} t"
+        "Overall Trend",
+        trend["trend"]
     )
 
     c2.metric(
-        "Lowest Performing Week",
-        f"Week {performance['worst_week']}",
-        f"{performance['worst_actual']:,.0f} t"
+        "Production Loss",
+        f'{trend["loss"]:,.0f} t'
     )
 
     c3.metric(
-        "Overall Trend",
-        performance["trend"]
+        "Achievement",
+        f'{trend["achievement"]:.1f}%'
     )
-
-    # ----------------------------------------------------------
-    # AI Production Assessment
-    # ----------------------------------------------------------
-
-    st.markdown("---")
-
-    st.subheader("🤖 AI Production Assessment")
 
     st.info(
-        ref["assessment"]
+        trend["assessment"]
     )
-
-    # ----------------------------------------------------------
-    # AI Investigation Roadmap
-    # ----------------------------------------------------------
-
-    st.markdown("---")
-
-    st.subheader("🛣️ AI Investigation Roadmap")
-
-    st.markdown(
-        "The AI will now perform the following investigations:"
-    )
-
-    for item in ref["roadmap"]:
-        st.markdown(f"✅ {item}")
 
     st.success(
         f"""
-The Executive Production Reference has established the historical context.
+AI Recommendation
 
-The detailed investigation will now focus on **{investigation['investigation_window']}**.
+The production decline started during
+{trend["recommended_window"]["label"]}
 
-Proceeding to Weekly Production Analysis...
+The investigation should focus on this
+window instead of only the user selected period.
 """
     )
 
-    # ------------------------------------------
-    # Weeks
-    # ------------------------------------------
+     # ---------------------------------------------------------
+# OPERATIONS INTELLIGENCE
+# ---------------------------------------------------------
 
+    st.markdown("---")
+
+    st.header("Step 3 : Operations Intelligence")
+
+    operations_agent = OperationsIntelligenceAgent()
+
+    operations = operations_agent.investigate(
+        trend
+    )
+
+    st.success(
+        "Operations Intelligence Completed"
+    )
+
+    st.dataframe(
+        operations["events"],
+        use_container_width=True
+    )
+
+    # ---------------------------------------------------------
+# CRIME SCENE INVESTIGATION
+# ---------------------------------------------------------
+
+    st.markdown("---")
+
+    st.header("Step 4 : Crime Scene Investigation")
+
+    crime_agent = CrimeSceneInvestigationAgent()
+
+    crime = crime_agent.investigate(
+        operations
+    )
     
-
-    st.header("Week Investigation")
-
-    week_agent = WeekAgent()
-
-    week = week_agent.investigate(weeks)
-
-    st.dataframe(
-        week["weekly_summary"],
-        use_container_width=True
+    st.success(
+        "Crime Scene Investigation Completed"
     )
+
+# -----------------------------
+# Incident
+# -----------------------------
+
+    st.subheader("Incident")
+
+    st.json(
+        crime["incident"]
+    )
+
+# -----------------------------
+# Timeline
+# -----------------------------
+
+    st.subheader("Timeline")
+
+    for item in crime["timeline"]:
+
+        st.markdown(
+            f"""
+    **{item['time']}**
+
+    **{item['title']}**
+
+    {item['description']}
+    """
+        )
+
+# -----------------------------
+# Evidence
+# -----------------------------
+
+    st.subheader("Evidence")
 
     st.success(
-        f"Worst Week : {week['worst_week']} | Loss : {week['worst_week_loss']:,.0f} tonnes"
+        f"Risk Level : {crime['evidence']['risk_level']}"
     )
 
-    # ------------------------------------------
-    # Day
-    # ------------------------------------------
+    for item in crime["evidence"]["items"]:
 
-    st.header("Day Investigation")
+        st.write("•", item["finding"])
 
-    day_agent = DayAgent()
+# -----------------------------
+# Story
+# -----------------------------
 
-    day = day_agent.investigate(
-        week["worst_week"]
+    st.subheader("Investigation Story")
+
+    st.info(
+        crime["story"]
     )
 
-    st.dataframe(
-        day["daily_summary"],
-        use_container_width=True
+
+   
+   
+
+    # ---------------------------------------------------------
+    # ASK FOLLOW-UP QUESTION
+    # ---------------------------------------------------------
+
+    st.markdown("---")
+
+    st.header("Ask a Follow-up Question")
+
+    followup = st.text_input(
+        "Continue the investigation",
+        placeholder="Why did the finishing mill stop?"
     )
 
-    st.success(
-        f"Worst Day : {day['worst_day'].date()} | Loss : {day['loss']:,.0f} tonnes"
-    )
+    if followup:
 
-    # ------------------------------------------
-    # Shift
-    # ------------------------------------------
+        st.info(
+            f"""
+Follow-up Question
 
-    st.header("Shift Investigation")
+{followup}
 
-    shift_agent = ShiftAgent()
+(The conversational investigation agent will use all
+previous investigation context instead of starting from
+scratch.)
+"""
+        )
 
-    shift = shift_agent.investigate(
-        day["worst_day"]
-    )
+    # ---------------------------------------------------------
+    # RAW DATA (OPTIONAL)
+    # ---------------------------------------------------------
 
-    st.dataframe(
-        shift["shift_summary"],
-        use_container_width=True
-    )
+    with st.expander("View Supporting Data"):
 
-    st.success(
-        f"Worst Shift : {shift['worst_shift']} | Loss : {shift['loss']:,.0f} tonnes"
-    )
+        st.subheader("Production Data")
 
-    # ------------------------------------------
-    # Shift Reports
-    # ------------------------------------------
+        st.dataframe(
+            service.production,
+            use_container_width=True
+        )
 
-    st.subheader("Shift Reports")
+        st.subheader("Production Plan")
 
-    st.dataframe(
-        shift["reports"],
-        use_container_width=True
-    )
+        st.dataframe(
+            service.daily_plan,
+            use_container_width=True
+        )
 
-    # ------------------------------------------
-    # Executive Summary
-    # ------------------------------------------
+        st.subheader("Shift Reports")
 
-    st.header("Executive Summary")
-
-    executive = ExecutiveSummaryAgent()
-
-    result = executive.investigate(weeks)
-
-    st.code(result["summary"])
+        st.dataframe(
+            service.shift_report,
+            use_container_width=True
+        )
