@@ -193,8 +193,8 @@ if st.button("Start Investigation"):
     c1, c2, c3 = st.columns(3)
 
     c1.metric(
-        "Overall Trend",
-        trend["trend"]
+        "Overall Pattern",
+        trend["overall_pattern"]
     )
 
     c2.metric(

@@ -348,7 +348,7 @@ class TrendAgent:
         confidence = "Medium"
 
         if (
-            trend == "Declining"
+            requested_trend == "Declining"
             and plan_status == "Stable"
             and gap > 7
         ):
@@ -408,7 +408,7 @@ class TrendAgent:
         assessment = f"""
 Production planning remained {plan_status.lower()} during the selected period.
 
-Actual production shows a {trend.lower()} trend.
+Actual production shows a {requested_trend.lower()} trend.
 
 Production changed by {previous_week_change:.1f}% compared to the previous week.
 
