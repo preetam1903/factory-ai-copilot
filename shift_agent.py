@@ -4,6 +4,7 @@ from production_service import ProductionService
 
 
 class ShiftAgent:
+
     def __init__(self):
         self.service = ProductionService()
 
@@ -12,36 +13,32 @@ class ShiftAgent:
         production = self.service.production.copy()
         production["DATE"] = production["DATE"].dt.date
 
-        plan = self.service.plan.copy()
-        plan["DATE"] = plan["DATE"].dt.date
-
         date = date.date() if hasattr(date, "date") else date
 
-        prod = production[production["DATE"] == date]
-        plan = plan[plan["DATE"] == date]
+        prod = production[
+            production["DATE"] == date
+        ].copy()
 
-        shift_actual = (
+        if prod.empty:
+            return {
+                "status": "No production data found."
+            }
+
+        # Shift-wise Actual Production
+        summary = (
             prod.groupby("SHIFT", as_index=False)
-            .agg({"ACTUAL_TONNAGE": "sum"})
+            .agg(
+                {
+                    "ACTUAL_TONNAGE": "sum"
+                }
+            )
         )
 
-        shift_plan = (
-            plan.groupby("SHIFT", as_index=False)
-            .agg({"PLAN_TONNAGE": "sum"})
-        )
+        summary = summary.sort_values(
+            "ACTUAL_TONNAGE"
+        ).reset_index(drop=True)
 
-        summary = shift_plan.merge(
-            shift_actual,
-            on="SHIFT",
-            how="left"
-        ).fillna(0)
-
-        summary["LOSS"] = (
-            summary["PLAN_TONNAGE"]
-            - summary["ACTUAL_TONNAGE"]
-        )
-
-        worst_shift = summary.loc[summary["LOSS"].idxmax()]
+        worst_shift = summary.iloc[0]
 
         reports = self.service.shift[
             (self.service.shift["DATE"].dt.date == date)
@@ -50,14 +47,26 @@ class ShiftAgent:
         ]
 
         return {
+
             "date": date,
+
             "shift_summary": summary,
+
             "worst_shift": worst_shift["SHIFT"],
-            "planned": float(worst_shift["PLAN_TONNAGE"]),
-            "actual": float(worst_shift["ACTUAL_TONNAGE"]),
-            "loss": float(worst_shift["LOSS"]),
+
+            "planned": None,
+
+            "actual": float(
+                worst_shift["ACTUAL_TONNAGE"]
+            ),
+
+            "loss": 0,
+
             "reports": reports,
-            "recommendation": f"Analyse operational events for Shift {worst_shift['SHIFT']}."
+
+            "recommendation":
+                f"Analyse operational events for Shift {worst_shift['SHIFT']}."
+
         }
 
 
@@ -68,8 +77,13 @@ if __name__ == "__main__":
     result = agent.investigate("2026-06-18")
 
     print("\n========== SHIFT INVESTIGATION ==========\n")
+
     print(result["shift_summary"])
+
     print("\n----------------------------------------")
+
     print("Worst Shift :", result["worst_shift"])
-    print("Loss        :", result["loss"])
+
+    print("Actual Production :", result["actual"])
+
     print(result["recommendation"])
