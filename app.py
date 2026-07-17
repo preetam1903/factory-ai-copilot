@@ -8,6 +8,7 @@ from week_agent import WeekAgent
 from day_agent import DayAgent
 from shift_agent import ShiftAgent
 from executive_summary_agent import ExecutiveSummaryAgent
+from production_service import ProductionService
 
 
 st.set_page_config(
@@ -23,7 +24,17 @@ question = st.text_input(
 )
 
 if st.button("Investigate"):
+    # ------------------------------------------
+# Data Validation
+# ------------------------------------------
 
+    st.header("🔍 Data Validation")
+
+    service = ProductionService()
+
+    validation = service.validate_weekly_data()
+
+    st.dataframe(validation, use_container_width=True)
     # ------------------------------------------
     # Executive Context
     # ------------------------------------------
