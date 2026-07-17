@@ -2,6 +2,7 @@
 
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
 
 from reference_agent import ReferenceAgent
 from week_agent import WeekAgent
@@ -40,19 +41,73 @@ if st.button("Investigate"):
     # ------------------------------------------
 
     st.header("Executive Context")
+   
+    weeks = 5
+
+    words = question.lower().split()
+
+    for i, word in enumerate(words):
+        if word.isdigit():
+            weeks = int(word)
+            break
 
     reference = ReferenceAgent()
 
     ref = reference.investigate()
 
+    
+
     chart = ref["summary"].copy()
 
-    fig = px.line(
-        chart,
-        x="WEEK_NO",
-        y=["PLAN_TONNAGE", "ACTUAL_TONNAGE"],
-        markers=True,
-        title="12 Week Production Trend"
+    fig = go.Figure()
+
+# -----------------------------
+# Plan
+# -----------------------------
+    fig.add_trace(
+        go.Scatter(
+            x=chart["WEEK_NO"],
+            y=chart["PLAN_TONNAGE"],
+            mode="lines+markers",
+            name="Plan",
+            line=dict(width=3)
+        )
+    )
+
+# -----------------------------
+# Actual
+# -----------------------------
+    fig.add_trace(
+        go.Scatter(
+            x=chart["WEEK_NO"],
+            y=chart["ACTUAL_TONNAGE"],
+            mode="lines+markers",
+            name="Actual",
+            line=dict(width=3)
+        )
+    )
+
+# -----------------------------
+# Highlight Investigation Window
+# -----------------------------
+    highlight = chart.tail(weeks)
+
+    fig.add_trace(
+        go.Scatter(
+            x=highlight["WEEK_NO"],
+            y=highlight["ACTUAL_TONNAGE"],
+            mode="lines+markers",
+            name="Investigation",
+            line=dict(width=6, color="red"),
+            marker=dict(size=12, color="red")
+        )
+    )
+
+    fig.update_layout(
+        title="Production Trend",
+        xaxis_title="Week",
+        yaxis_title="Tonnes",
+        hovermode="x unified"
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -63,14 +118,7 @@ if st.button("Investigate"):
     # Weeks
     # ------------------------------------------
 
-    weeks = 5
-
-    words = question.lower().split()
-
-    for i, word in enumerate(words):
-        if word.isdigit():
-            weeks = int(word)
-            break
+    
 
     st.header("Week Investigation")
 
