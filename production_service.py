@@ -22,6 +22,7 @@ class ProductionService:
 
         self.load_data()
         self.prepare_data()
+        self.validate_weekly_data()
 
 # Backward compatibility with existing agents
         self.plan = self.daily_plan
