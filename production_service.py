@@ -18,8 +18,46 @@ class ProductionService:
         self._prepare_data()
 
     def _prepare_data(self):
+
+    # -----------------------------
+    # Production Dataset
+    # -----------------------------
+        self.production.rename(
+            columns={
+                "PROD_DATE": "DATE",
+                "COIL_WEIGHT_TON": "ACTUAL_TONNAGE"
+            },
+            inplace=True
+        )
+
         self.production["DATE"] = pd.to_datetime(self.production["DATE"])
+        self.production["WEEK_NO"] = self.production["DATE"].dt.isocalendar().week.astype(int)
+
+    # -----------------------------
+    # Production Plan Dataset
+    # -----------------------------
+        self.plan.rename(
+            columns={
+                "Date": "DATE",
+                "Week": "WEEK_NO",
+                "Planned Production (t)": "PLAN_TONNAGE"
+            },
+            inplace=True
+        )
+
         self.plan["DATE"] = pd.to_datetime(self.plan["DATE"])
+
+    # -----------------------------
+    # Shift Report Dataset
+    # -----------------------------
+        self.shift.rename(
+            columns={
+                "Date": "DATE",
+                "Shift": "SHIFT"
+            },
+            inplace=True
+        )
+
         self.shift["DATE"] = pd.to_datetime(self.shift["DATE"])
 
     # -------------------------------------------------------
