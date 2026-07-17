@@ -39,6 +39,62 @@ class ProductionService:
         )
 
     # ----------------------------------------------------
+# Week Details
+# ----------------------------------------------------
+
+    def get_week_details(self, week_no):
+
+    # Production for the selected week
+        production = self.production[
+            self.production["WEEK_NO"] == week_no
+        ].copy()
+
+    # Daily plan for the selected week
+        plan = self.daily_plan[
+            self.daily_plan["WEEK_NO"] == week_no
+        ].copy()
+
+    # Daily summary
+        actual_daily = (
+            production
+            .groupby("DATE", as_index=False)
+            .agg(
+                ACTUAL_TONNAGE=("ACTUAL_TONNAGE", "sum")
+            )
+        )
+
+        planned_daily = (
+            plan
+            .groupby("DATE", as_index=False)
+            .agg(
+                PLAN_TONNAGE=("PLAN_TONNAGE", "sum")
+            )
+        )
+
+        summary = planned_daily.merge(
+            actual_daily,
+            on="DATE",
+            how="left"
+        )
+
+        summary["ACTUAL_TONNAGE"] = summary["ACTUAL_TONNAGE"].fillna(0)
+
+        summary["LOSS"] = (
+            summary["PLAN_TONNAGE"]
+            - summary["ACTUAL_TONNAGE"]
+        )
+
+        summary = summary.sort_values("DATE")
+
+        return {
+            "week": week_no,
+            "planned": summary["PLAN_TONNAGE"].sum(),
+            "actual": summary["ACTUAL_TONNAGE"].sum(),
+            "loss": summary["LOSS"].sum(),
+            "daily_data": summary
+        }
+
+    # ----------------------------------------------------
     # Load Excel Files
     # ----------------------------------------------------
 
