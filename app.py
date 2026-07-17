@@ -1,7 +1,4 @@
-# app.py
-
 import streamlit as st
-import plotly.express as px
 import plotly.graph_objects as go
 
 from reference_agent import ReferenceAgent
@@ -21,13 +18,14 @@ st.title("🏭 Production AI Copilot")
 
 question = st.text_input(
     "Ask a Question",
-    value="What happened in the last 5 weeks?"
+    value="What happened in the last 2 weeks?"
 )
 
 if st.button("Investigate"):
-    # ------------------------------------------
-# Data Validation
-# ------------------------------------------
+
+    # ----------------------------------------------------------
+    # Data Validation
+    # ----------------------------------------------------------
 
     st.header("🔍 Data Validation")
 
@@ -35,84 +33,225 @@ if st.button("Investigate"):
 
     validation = service.validate_weekly_data()
 
-    st.dataframe(validation, use_container_width=True)
-    # ------------------------------------------
-    # Executive Context
-    # ------------------------------------------
+    st.dataframe(
+        validation,
+        use_container_width=True
+    )
 
-    st.header("Executive Context")
-   
+    # ----------------------------------------------------------
+    # Determine Investigation Window
+    # ----------------------------------------------------------
+
     weeks = 5
 
     words = question.lower().split()
 
-    for i, word in enumerate(words):
+    for word in words:
         if word.isdigit():
             weeks = int(word)
             break
 
+    # ----------------------------------------------------------
+    # Executive Production Reference
+    # ----------------------------------------------------------
+
+    st.header("🏭 Executive Production Reference")
+
     reference = ReferenceAgent()
 
-    ref = reference.investigate()
+    ref = reference.investigate(weeks)
 
-    
+    investigation = ref["investigation"]
+    summary = ref["summary"]
+    performance = ref["performance"]
 
-    chart = ref["summary"].copy()
+    chart = ref["chart"].copy()
+
+    # ----------------------------------------------------------
+    # Trend Graph
+    # ----------------------------------------------------------
 
     fig = go.Figure()
 
-# -----------------------------
-# Plan
-# -----------------------------
     fig.add_trace(
         go.Scatter(
             x=chart["WEEK_NO"],
             y=chart["PLAN_TONNAGE"],
             mode="lines+markers",
-            name="Plan",
+            name="Planned Production",
             line=dict(width=3)
         )
     )
 
-# -----------------------------
-# Actual
-# -----------------------------
     fig.add_trace(
         go.Scatter(
             x=chart["WEEK_NO"],
             y=chart["ACTUAL_TONNAGE"],
             mode="lines+markers",
-            name="Actual",
+            name="Actual Production",
             line=dict(width=3)
         )
     )
 
-# -----------------------------
-# Highlight Investigation Window
-# -----------------------------
     highlight = chart.tail(weeks)
 
-    fig.add_trace(
-        go.Scatter(
-            x=highlight["WEEK_NO"],
-            y=highlight["ACTUAL_TONNAGE"],
-            mode="lines+markers",
-            name="Investigation",
-            line=dict(width=6, color="red"),
-            marker=dict(size=12, color="red")
-        )
+    fig.add_vrect(
+        x0=highlight["WEEK_NO"].min() - 0.5,
+        x1=highlight["WEEK_NO"].max() + 0.5,
+        fillcolor="yellow",
+        opacity=0.15,
+        layer="below",
+        line_width=0
+    )
+
+    fig.add_annotation(
+        x=highlight["WEEK_NO"].min(),
+        y=highlight["ACTUAL_TONNAGE"].max(),
+        text="Investigation Starts",
+        showarrow=True,
+        arrowhead=2
     )
 
     fig.update_layout(
-        title="Production Trend",
-        xaxis_title="Week",
+        title="Production Performance Trend",
+        xaxis_title="Production Week",
         yaxis_title="Tonnes",
-        hovermode="x unified"
+        hovermode="x unified",
+        height=450
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
 
-    st.text(ref["reference"])
+    # ----------------------------------------------------------
+    # Investigation Overview
+    # ----------------------------------------------------------
+
+    st.markdown("---")
+
+    st.subheader("📋 Investigation Overview")
+
+    st.markdown(f"""
+**Business Question**
+
+{investigation["business_question"]}
+
+**Trend Analysis Window**
+
+{investigation["trend_window"]}
+
+This period provides the historical production context used for trend analysis.
+
+**Investigation Window**
+
+{investigation["investigation_window"]}
+
+This is the period selected for detailed investigation.
+
+**Purpose**
+
+{investigation["purpose"]}
+""")
+
+    # ----------------------------------------------------------
+    # Production Performance Summary
+    # ----------------------------------------------------------
+
+    st.markdown("---")
+
+    st.subheader("📊 Production Performance Summary")
+
+    st.caption(
+        f"Summary Period : {investigation['trend_window']}"
+    )
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric(
+        "Planned Production",
+        f"{summary['planned']:,.0f} t"
+    )
+
+    c2.metric(
+        "Actual Production",
+        f"{summary['actual']:,.0f} t"
+    )
+
+    c3.metric(
+        "Production Loss",
+        f"{summary['loss']:,.0f} t"
+    )
+
+    c4.metric(
+        "Achievement",
+        f"{summary['achievement']:.1f}%"
+    )
+
+    # ----------------------------------------------------------
+    # Performance Overview
+    # ----------------------------------------------------------
+
+    st.markdown("---")
+
+    st.subheader("📈 Performance Overview")
+
+    c1, c2, c3 = st.columns(3)
+
+    c1.metric(
+        "Best Performing Week",
+        f"Week {performance['best_week']}",
+        f"{performance['best_actual']:,.0f} t"
+    )
+
+    c2.metric(
+        "Lowest Performing Week",
+        f"Week {performance['worst_week']}",
+        f"{performance['worst_actual']:,.0f} t"
+    )
+
+    c3.metric(
+        "Overall Trend",
+        performance["trend"]
+    )
+
+    # ----------------------------------------------------------
+    # AI Production Assessment
+    # ----------------------------------------------------------
+
+    st.markdown("---")
+
+    st.subheader("🤖 AI Production Assessment")
+
+    st.info(
+        ref["assessment"]
+    )
+
+    # ----------------------------------------------------------
+    # AI Investigation Roadmap
+    # ----------------------------------------------------------
+
+    st.markdown("---")
+
+    st.subheader("🛣️ AI Investigation Roadmap")
+
+    st.markdown(
+        "The AI will now perform the following investigations:"
+    )
+
+    for item in ref["roadmap"]:
+        st.markdown(f"✅ {item}")
+
+    st.success(
+        f"""
+The Executive Production Reference has established the historical context.
+
+The detailed investigation will now focus on **{investigation['investigation_window']}**.
+
+Proceeding to Weekly Production Analysis...
+"""
+    )
 
     # ------------------------------------------
     # Weeks
