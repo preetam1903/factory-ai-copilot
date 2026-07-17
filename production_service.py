@@ -1,27 +1,66 @@
-# services/production_service.py
-
 from pathlib import Path
 import pandas as pd
 
 
 class ProductionService:
+
     def __init__(
         self,
         production_file="COIL_OPERATION_FACT.xlsx",
         plan_file="PRODUCTION_PLAN.xlsx",
         shift_file="SHIFT_REPORT.xlsx",
     ):
-        self.production = pd.read_excel(Path(production_file))
-        self.plan = pd.read_excel(Path(plan_file))
-        self.shift = pd.read_excel(Path(shift_file))
 
-        self._prepare_data()
+        self.production_file = Path(production_file)
+        self.plan_file = Path(plan_file)
+        self.shift_file = Path(shift_file)
 
-    def _prepare_data(self):
+        self.production = None
+        self.daily_plan = None
+        self.weekly_plan = None
+        self.shift_report = None
 
-    # -----------------------------
-    # Production Dataset
-    # -----------------------------
+        self.load_data()
+        self.prepare_data()
+
+    # ----------------------------------------------------
+    # Load Excel Files
+    # ----------------------------------------------------
+
+    def load_data(self):
+
+        # Production
+        self.production = pd.read_excel(
+            self.production_file,
+            sheet_name="COIL_OPERATION_FACT"
+        )
+
+        # Daily Plan
+        self.daily_plan = pd.read_excel(
+            self.plan_file,
+            sheet_name="DAILY_PLAN"
+        )
+
+        # Weekly Plan
+        self.weekly_plan = pd.read_excel(
+            self.plan_file,
+            sheet_name="WEEKLY_PLAN"
+        )
+
+        # Shift Report
+        self.shift_report = pd.read_excel(
+            self.shift_file,
+            sheet_name="SHIFT_REPORT"
+        )
+
+    # ----------------------------------------------------
+    # Prepare Data
+    # ----------------------------------------------------
+
+    def prepare_data(self):
+
+        # ---------- Production ----------
+
         self.production.rename(
             columns={
                 "PROD_DATE": "DATE",
@@ -30,13 +69,19 @@ class ProductionService:
             inplace=True
         )
 
-        self.production["DATE"] = pd.to_datetime(self.production["DATE"])
-        self.production["WEEK_NO"] = self.production["DATE"].dt.isocalendar().week.astype(int)
+        self.production["DATE"] = pd.to_datetime(
+            self.production["DATE"]
+        )
 
-    # -----------------------------
-    # Production Plan Dataset
-    # -----------------------------
-        self.plan.rename(
+        self.production["WEEK_NO"] = (
+            self.production["DATE"]
+            .dt.isocalendar()
+            .week.astype(int)
+        )
+
+        # ---------- Daily Plan ----------
+
+        self.daily_plan.rename(
             columns={
                 "Date": "DATE",
                 "Week": "WEEK_NO",
@@ -45,19 +90,37 @@ class ProductionService:
             inplace=True
         )
 
-        self.plan["DATE"] = pd.to_datetime(self.plan["DATE"])
+        self.daily_plan["DATE"] = pd.to_datetime(
+            self.daily_plan["DATE"]
+        )
 
-        self.plan["WEEK_NO"] = (
-            self.plan["WEEK_NO"]
+        self.daily_plan["WEEK_NO"] = (
+            self.daily_plan["WEEK_NO"]
             .astype(str)
             .str.replace("W", "", regex=False)
             .astype(int)
         )
 
-    # -----------------------------
-    # Shift Report Dataset
-    # -----------------------------
-        self.shift.rename(
+        # ---------- Weekly Plan ----------
+
+        self.weekly_plan.rename(
+            columns={
+                "Week": "WEEK_NO",
+                "Planned Production (t)": "PLAN_TONNAGE"
+            },
+            inplace=True
+        )
+
+        self.weekly_plan["WEEK_NO"] = (
+            self.weekly_plan["WEEK_NO"]
+            .astype(str)
+            .str.replace("W", "", regex=False)
+            .astype(int)
+        )
+
+        # ---------- Shift Report ----------
+
+        self.shift_report.rename(
             columns={
                 "Date": "DATE",
                 "Shift": "SHIFT"
@@ -65,162 +128,11 @@ class ProductionService:
             inplace=True
         )
 
-        self.shift["DATE"] = pd.to_datetime(self.shift["DATE"])
-
-    # -------------------------------------------------------
-    # Executive Summary (12 Weeks)
-    # -------------------------------------------------------
-
-    def get_12_week_summary(self):
-
-        weekly_actual = (
-            self.production.groupby("WEEK_NO")["ACTUAL_TONNAGE"]
-            .sum()
-            .reset_index()
+        self.shift_report["DATE"] = pd.to_datetime(
+            self.shift_report["DATE"]
         )
 
-        weekly_plan = (
-            self.plan.groupby("WEEK_NO")["PLAN_TONNAGE"]
-            .sum()
-            .reset_index()
-        )
-
-        summary = weekly_plan.merge(
-            weekly_actual,
-            on="WEEK_NO",
-            how="left"
-        ).fillna(0)
-
-        summary["LOSS"] = (
-            summary["PLAN_TONNAGE"] -
-            summary["ACTUAL_TONNAGE"]
-        )
-
-        summary = summary.sort_values("WEEK_NO")
-
-        return summary
-
-    # -------------------------------------------------------
-    # Dynamic Investigation Window
-    # -------------------------------------------------------
-
-    def get_last_n_weeks(self, n):
-
-        summary = self.get_12_week_summary()
-
-        return summary.tail(n).reset_index(drop=True)
-
-    # -------------------------------------------------------
-    # Week Details
-    # -------------------------------------------------------
-
-    def get_week_details(self, week_no):
-
-        prod = self.production[
-            self.production["WEEK_NO"] == week_no
-        ].copy()
-
-        plan = self.plan[
-            self.plan["WEEK_NO"] == week_no
-        ].copy()
-
-        planned = plan["PLAN_TONNAGE"].sum()
-        actual = prod["ACTUAL_TONNAGE"].sum()
-
-        return {
-            "week": week_no,
-            "planned": planned,
-            "actual": actual,
-            "loss": planned - actual,
-            "daily_data": prod
-        }
-
-    # -------------------------------------------------------
-    # Day Details
-    # -------------------------------------------------------
-
-    def get_day_details(self, date):
-
-        date = pd.to_datetime(date)
-
-        prod = self.production[
-            self.production["DATE"] == date
-        ].copy()
-
-        plan = self.plan[
-            self.plan["DATE"] == date
-        ].copy()
-
-        planned = plan["PLAN_TONNAGE"].sum()
-        actual = prod["ACTUAL_TONNAGE"].sum()
-
-        return {
-            "date": date,
-            "planned": planned,
-            "actual": actual,
-            "loss": planned - actual,
-            "shift_data": prod
-        }
-
-    # -------------------------------------------------------
-    # Shift Details
-    # -------------------------------------------------------
-
-    def get_shift_details(self, date, shift):
-
-        date = pd.to_datetime(date)
-
-        prod = self.production[
-            (self.production["DATE"] == date)
-            & (self.production["SHIFT"] == shift)
-        ].copy()
-
-        plan = self.plan[
-            (self.plan["DATE"] == date)
-            & (self.plan["SHIFT"] == shift)
-        ].copy()
-
-        planned = plan["PLAN_TONNAGE"].sum()
-        actual = prod["ACTUAL_TONNAGE"].sum()
-
-        reports = self.shift[
-            (self.shift["DATE"] == date)
-            & (self.shift["SHIFT"] == shift)
-        ].copy()
-
-        return {
-            "date": date,
-            "shift": shift,
-            "planned": planned,
-            "actual": actual,
-            "loss": planned - actual,
-            "reports": reports
-        }
-
-    # -------------------------------------------------------
-    # Utility
-    # -------------------------------------------------------
-
-    def calculate_production_loss(self, planned, actual):
-        return planned - actual
-
-    def calculate_plan_vs_actual(self):
-        summary = self.get_12_week_summary()
-
-        return summary[
-            [
-                "WEEK_NO",
-                "PLAN_TONNAGE",
-                "ACTUAL_TONNAGE",
-                "LOSS",
-            ]
-        ]
-
-    if __name__ == "__main__":
-
-        service = ProductionService()
-
-        print(service.plan.head(20))
-        print(service.plan.groupby("WEEK_NO")["PLAN_TONNAGE"].sum())
-
-        print(service.production.groupby("WEEK_NO")["ACTUAL_TONNAGE"].sum())
+        print("✅ Production rows :", len(self.production))
+        print("✅ Daily Plan rows :", len(self.daily_plan))
+        print("✅ Weekly Plan rows :", len(self.weekly_plan))
+        print("✅ Shift Report rows :", len(self.shift_report))
