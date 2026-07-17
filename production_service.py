@@ -24,6 +24,21 @@ class ProductionService:
         self.prepare_data()
 
     # ----------------------------------------------------
+# Last N Weeks
+# ----------------------------------------------------
+
+    def get_last_n_weeks(self, n):
+
+        summary = self.get_12_week_summary()
+
+        return (
+            summary
+            .sort_values("WEEK_NO")
+            .tail(n)
+            .reset_index(drop=True)
+        )
+
+    # ----------------------------------------------------
     # Load Excel Files
     # ----------------------------------------------------
 
