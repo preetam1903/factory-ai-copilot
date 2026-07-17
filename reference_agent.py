@@ -85,10 +85,23 @@ class ReferenceAgent:
 
             "summary": {
 
-                "planned": total_plan,
-                "actual": total_actual,
-                "loss": total_loss,
-                "achievement": achievement
+                "trend": {
+
+                    "planned": total_plan,
+                    "actual": total_actual,
+                    "loss": total_loss,
+                    "achievement": achievement
+
+                },
+
+                "investigation": {
+
+                    "planned": investigation_plan,
+                    "actual": investigation_actual,
+                    "loss": investigation_loss,
+                    "achievement": investigation_achievement
+
+                }
 
             },
 
