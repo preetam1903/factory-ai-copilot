@@ -66,6 +66,7 @@ if st.button("Start Investigation"):
     context_agent = ContextAgent()
 
     context = context_agent.investigate(question)
+    context["question"] = question
 
     st.success("Business context established")
 
