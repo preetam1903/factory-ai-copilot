@@ -47,6 +47,13 @@ class ProductionService:
 
         self.plan["DATE"] = pd.to_datetime(self.plan["DATE"])
 
+        self.plan["WEEK_NO"] = (
+            self.plan["WEEK_NO"]
+            .astype(str)
+            .str.replace("W", "", regex=False)
+            .astype(int)
+        )
+
     # -----------------------------
     # Shift Report Dataset
     # -----------------------------
