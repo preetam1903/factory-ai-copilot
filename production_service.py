@@ -7,9 +7,9 @@ import pandas as pd
 class ProductionService:
     def __init__(
         self,
-        production_file="datasets/production.csv",
-        plan_file="datasets/production_plan.csv",
-        shift_file="datasets/shift_report.csv",
+        production_file="COIL_OPERATION_FACT.xlsx",
+        plan_file="PRODUCTION_PLAN.xlsx",
+        shift_file="SHIFT_REPORT.xlsx",
     ):
         self.production = pd.read_csv(Path(production_file))
         self.plan = pd.read_csv(Path(plan_file))
