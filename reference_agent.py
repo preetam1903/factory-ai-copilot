@@ -18,6 +18,23 @@ class ReferenceAgent:
             (total_actual / total_plan) * 100, 1
         )
 
+        # -------------------------------------------------
+# Investigation Window Summary
+# -------------------------------------------------
+
+        investigation = summary.tail(investigation_weeks)
+
+        investigation_plan = investigation["PLAN_TONNAGE"].sum()
+
+        investigation_actual = investigation["ACTUAL_TONNAGE"].sum()
+
+        investigation_loss = investigation["LOSS"].sum()
+
+        investigation_achievement = round(
+            (investigation_actual / investigation_plan) * 100,
+            1
+        )
+
         best_week = summary.loc[
             summary["ACTUAL_TONNAGE"].idxmax()
         ]
