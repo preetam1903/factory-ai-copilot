@@ -190,28 +190,66 @@ if st.button("Start Investigation"):
         fig,
         use_container_width=True
     )
+    ############
+
+    st.subheader("Investigation Context")
+
+    requested = trend["investigation_period"]
+    analysis = trend["analysis_period"]
+
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.info(
+        f"""
+    **Requested Investigation**
+
+    Weeks **{requested['start_week']} - {requested['end_week']}**
+
+    This is the period requested by the user.
+    """
+        )
+
+    with c2:
+        st.info(
+            f"""
+    **Analysis Window**
+
+    Weeks **{analysis['start_week']} - {analysis['end_week']}**
+
+    Additional historical weeks are included for trend analysis.
+    """
+        )
+
+
+
+    ##############
 
     st.subheader("Executive Trend Dashboard")
 
     c1, c2, c3, c4 = st.columns(4)
 
     c1.metric(
-        "Achievement",
+        "Achievement (Weeks "
+        f"{requested['start_week']}-{requested['end_week']})",
         f"{trend['achievement']:.1f}%"
     )
 
     c2.metric(
-        "Production Loss",
+        "Production Loss (Weeks "
+        f"{requested['start_week']}-{requested['end_week']})",
         f"{trend['loss']:,.0f} t"
     )
 
+    latest = requested["end_week"]
+
     c3.metric(
-        "Week-on-Week",
+        f"Week {latest} vs Week {latest-1}",
         f"{trend['previous_week_change']:.1f}%"
     )
 
     c4.metric(
-        "Rolling Avg",
+        "vs 4-Week Average",
         f"{trend['rolling_average_change']:.1f}%"
     )
 

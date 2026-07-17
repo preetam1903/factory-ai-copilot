@@ -297,27 +297,47 @@ class TrendAgent:
         )
 
         # --------------------------------------------------
-        # Plan Stability
-        # --------------------------------------------------
+# Planning Impact
+# --------------------------------------------------
 
-        plan_change = round(
+        plan_start = float(investigation.iloc[0]["PLAN_TONNAGE"])
+        plan_end = float(investigation.iloc[-1]["PLAN_TONNAGE"])
 
-            investigation["PLAN_CHANGE_%"]
-            .fillna(0)
-            .abs()
-            .mean(),
+        actual_start = float(investigation.iloc[0]["ACTUAL_TONNAGE"])
+        actual_end = float(investigation.iloc[-1]["ACTUAL_TONNAGE"])
 
+        plan_reduction = round(
+            ((plan_end - plan_start) / plan_start) * 100,
             1
-
         )
 
-        if plan_change < 2:
+        actual_reduction = round(
+            ((actual_end - actual_start) / actual_start) * 100,
+            1
+        )
 
-            plan_status = "Stable"
+        if abs(actual_reduction) < 0.1:
+
+            planning_contribution = 0
 
         else:
 
-            plan_status = "Changed"
+            planning_contribution = round(
+                abs(plan_reduction) / abs(actual_reduction) * 100,
+                1
+            )
+
+        if planning_contribution < 30:
+
+            planning_impact = "Low"
+
+        elif planning_contribution < 70:
+
+            planning_impact = "Medium"
+
+        else:
+
+            planning_impact = "High"
 
         # --------------------------------------------------
         # Severity
@@ -349,7 +369,7 @@ class TrendAgent:
 
         if (
             requested_trend == "Declining"
-            and plan_status == "Stable"
+            and planning_impact == "Stable"
             and gap > 7
         ):
 
@@ -377,7 +397,13 @@ class TrendAgent:
 
             "overall_pattern": overall_pattern,
 
-            "plan_status": plan_status,
+            "plan_reduction": plan_reduction,
+
+            "actual_reduction": actual_reduction,
+
+            "planning_contribution": planning_contribution,
+
+            "planning_impact": planning_impact,
 
             "achievement": achievement,
 
@@ -406,7 +432,7 @@ class TrendAgent:
         # --------------------------------------------------
 
         assessment = f"""
-Production planning remained {plan_status.lower()} during the selected period.
+Planning explains approximately {planning_contribution:.1f}% of the production reduction.
 
 Actual production shows a {requested_trend.lower()} trend.
 
@@ -429,16 +455,16 @@ Recommended investigation should focus on Weeks {trend_start} to {int(latest['WE
 
         findings = []
 
-        if plan_status == "Stable":
+        if planning_impact == "Low":
 
             findings.append(
-                "Production plan remained stable."
+                "Production planning explains only a small portion of the production decline."
             )
 
         else:
 
             findings.append(
-                "Production plan changed."
+                "Production planning contributed significantly to the production decline."
             )
 
         if previous_week_change < 0:
@@ -509,7 +535,13 @@ Recommended investigation should focus on Weeks {trend_start} to {int(latest['WE
 
             "confidence": confidence,
 
-            "plan_status": plan_status,
+            "plan_reduction": plan_reduction,
+
+            "actual_reduction": actual_reduction,
+
+            "planning_contribution": planning_contribution,
+
+            "planning_impact": planning_impact,
 
             "achievement": achievement,
 
