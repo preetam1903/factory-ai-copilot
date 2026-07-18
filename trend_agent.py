@@ -264,11 +264,11 @@ class TrendAgent:
 
         start_date = self.service.production[
             self.service.production["WEEK_NO"] == trend_start
-        ]["PROD_DATE"].min()
+        ]["DATE"].min()
 
         end_date = self.service.production[
             self.service.production["WEEK_NO"] == latest_week
-        ]["PROD_DATE"].max()
+        ]["DATE"].max()
 
         # --------------------------------------------------
         # Previous Week Comparison
