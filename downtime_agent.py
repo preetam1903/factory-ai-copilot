@@ -6,10 +6,10 @@ class DowntimeAgent:
     def __init__(self, downtime_df):
         self.df = downtime_df.copy()
 
-        # Convert date
-        self.df["Date"] = pd.to_datetime(self.df["Date"])
+        # Standardized date column
+        self.df["DATE"] = pd.to_datetime(self.df["DATE"])
 
-        # Create downtime in hours
+        # Downtime in hours
         self.df["Downtime Hrs"] = self.df["Duration (min)"] / 60
 
     def investigate(self, start_date, end_date):
@@ -21,17 +21,16 @@ class DowntimeAgent:
         # Investigation Period
         # ----------------------------------------
         period = self.df[
-            (self.df["Date"] >= start_date) &
-            (self.df["Date"] <= end_date)
+            (self.df["DATE"] >= start_date) &
+            (self.df["DATE"] <= end_date)
         ]
 
         # ----------------------------------------
         # Reference Period (Previous 14 Days)
-        # We will improve this later.
         # ----------------------------------------
         reference = self.df[
-            (self.df["Date"] < start_date) &
-            (self.df["Date"] >= start_date - pd.Timedelta(days=14))
+            (self.df["DATE"] < start_date) &
+            (self.df["DATE"] >= start_date - pd.Timedelta(days=14))
         ]
 
         # ----------------------------------------
@@ -53,7 +52,7 @@ class DowntimeAgent:
         # Downtime By Shift
         # ----------------------------------------
         downtime_by_shift = (
-            period.groupby("Shift")["Downtime Hrs"]
+            period.groupby("SHIFT")["Downtime Hrs"]
             .sum()
             .sort_values(ascending=False)
             .to_dict()
@@ -80,8 +79,7 @@ class DowntimeAgent:
         )
 
         # ----------------------------------------
-        # Top Operator Remarks
-        # (Placeholder for reason analysis)
+        # Operator Remarks
         # ----------------------------------------
         downtime_by_remark = (
             period.groupby("Operator Remarks")["Downtime Hrs"]
