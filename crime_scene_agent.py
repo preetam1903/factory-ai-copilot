@@ -340,8 +340,8 @@ class CrimeSceneInvestigationAgent:
 
             "operator_remarks":
 
-                reports["REMARKS"].dropna().tolist()
-                if "REMARKS" in reports.columns
+                reports["Operator Remarks"].dropna().tolist()
+                if "Operator Remarks" in reports.columns
                 else []
 
         }
@@ -637,7 +637,7 @@ The report should read like it was written by an experienced Operations Investig
             for _, row in reports.iterrows():
 
                 remark = str(
-                    row.get("REMARKS", "")
+                    row.get("Operator Remarks", "")
                 ).strip()
 
                 if remark != "":
@@ -731,7 +731,7 @@ The report should read like it was written by an experienced Operations Investig
 
         if len(reports) > 0:
 
-            remarks = reports["REMARKS"] \
+            remarks = reports["Operator Remarks"] \
                 .dropna() \
                 .astype(str)
 
@@ -969,7 +969,7 @@ The report should read like it was written by an experienced Operations Investig
 
         if len(reports) > 0:
 
-            remarks = reports["REMARKS"] \
+            remarks = reports["Operator Remarks"] \
                 .dropna() \
                 .astype(str)
 
