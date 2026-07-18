@@ -7,6 +7,7 @@ from context_agent import ContextAgent
 from trend_agent import TrendAgent
 from operations_intelligence_agent import OperationsIntelligenceAgent
 from crime_scene_agent import CrimeSceneInvestigationAgent
+from trend_reasoning_agent import TrendReasoningAgent
 
 
 
@@ -361,6 +362,25 @@ if st.button("Start Investigation"):
     for item in findings:
 
         st.write("✅", item)
+
+
+    # ---------------------------------------------------------
+# AI Investigation Interpretation
+# ---------------------------------------------------------
+
+    st.subheader("6. AI Investigation Interpretation")
+
+    reasoning_agent = TrendReasoningAgent(
+        st.secrets["OPENAI_API_KEY"]
+    )
+
+    with st.spinner("AI is interpreting investigation findings..."):
+
+        report = reasoning_agent.generate(
+            trend["trend_facts"]
+        )
+
+    st.markdown(report)
 
     
 
