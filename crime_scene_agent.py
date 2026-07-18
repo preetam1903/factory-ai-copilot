@@ -24,7 +24,11 @@ class CrimeSceneInvestigationAgent:
 
     def rank_equipment_events(self, operations):
 
-        events = operations.get("events", [])
+        events = (
+            operations
+            .get("operator_equipment", {})
+            .get("events", [])
+        )
 
         if len(events) == 0:
             return []
@@ -1039,11 +1043,27 @@ The report should read like it was written by an experienced Operations Investig
 
                 "incident": None,
 
+                "summary": {},
+
                 "timeline": [],
+        
+                "window": {},
 
-                "evidence": [],
+                "production_timeline": {},
 
-                "story": "No equipment related downtime found."
+                "transitions": {},
+
+                "evidence": {
+
+                    "risk_level": "LOW",
+
+                    "items": []
+
+                },
+
+                "story": "No equipment related downtime found.",
+
+                "ai_story": "No equipment related downtime found."
 
             }
 

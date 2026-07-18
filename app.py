@@ -515,13 +515,21 @@ if st.button("Start Investigation"):
 
     st.subheader("Evidence")
 
-    st.success(
-        f"Risk Level : {crime['evidence']['risk_level']}"
-    )
+    if isinstance(crime["evidence"], list):
 
-    for item in crime["evidence"]["items"]:
+        for item in crime["evidence"]:
 
-        st.write("•", item["finding"])
+            st.info(
+                f"""
+    **{item.get('type','Evidence')}**
+
+    {item.get('description','')}
+    """
+            )
+
+    else:
+
+        st.json(crime["evidence"])
 
 # -----------------------------
 # Story
@@ -530,7 +538,7 @@ if st.button("Start Investigation"):
     st.subheader("Investigation Story")
 
     st.info(
-        crime["story"]
+        crime["ai_story"]
     )
 
 

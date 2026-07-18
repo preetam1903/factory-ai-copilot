@@ -11,6 +11,10 @@ class OperatorEquipmentAgent:
 
         rows = []
 
+        # -----------------------------------------------------
+        # Build input for AI
+        # -----------------------------------------------------
+
         for idx, row in downtime_df.iterrows():
 
             rows.append({
@@ -62,15 +66,86 @@ Return ONLY JSON.
                     "content": prompt
                 }
             ]
-            
         )
 
+        # -----------------------------------------------------
+        # Parse AI Response
+        # -----------------------------------------------------
+
         try:
-            events = json.loads(response.choices[0].message.content)
+            ai_events = json.loads(
+                response.choices[0].message.content
+            )
         except Exception:
-            events = []
+            ai_events = []
+
+        # -----------------------------------------------------
+        # Merge AI output with original downtime data
+        # -----------------------------------------------------
+
+        enriched_events = []
+
+        for event in ai_events:
+
+            idx = event.get("id")
+
+            if idx is None or idx not in downtime_df.index:
+                continue
+
+            row = downtime_df.loc[idx]
+
+            enriched_events.append({
+
+                "id": idx,
+
+                "equipment": row["Equipment"],
+
+                "department": row["Department"],
+
+                "date": str(row["DATE"]),
+
+                "start_time": str(row["Start Time"]),
+
+                "end_time": str(row["End Time"]),
+
+                "duration_minutes": row["Duration (min)"],
+
+                "description": row["Operator Remarks"],
+
+                "event_type": event.get("issue_category", "Unknown"),
+
+                "severity": event.get("severity", "Unknown"),
+
+                "production_impact": event.get(
+                    "production_impact",
+                    "Unknown"
+                ),
+
+                "root_cause": event.get(
+                    "root_cause",
+                    ""
+                ),
+
+                "corrective_action": event.get(
+                    "corrective_action",
+                    ""
+                ),
+
+                "confidence": event.get(
+                    "confidence",
+                    0
+                )
+
+            })
+
+        # -----------------------------------------------------
+        # Return
+        # -----------------------------------------------------
 
         return {
-            "summary": f"AI analysed {len(events)} operational events.",
-            "events": events
+
+            "summary": f"AI analysed {len(enriched_events)} operational events.",
+
+            "events": enriched_events
+
         }
