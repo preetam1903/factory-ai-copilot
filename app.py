@@ -88,7 +88,7 @@ if st.button("Start Investigation"):
         ]
     })
 
-st.table(context_df)
+    st.table(context_df)
 
     # ---------------------------------------------------------
     # TREND AGENT
