@@ -82,9 +82,9 @@ if st.button("Start Investigation"):
             "Investigation Window"
         ],
         "Value": [
-            context["question"],
+            context["business_question"],
             context["objective"],
-            context["analysis_window"],
+            context["trend_window"],
             context["requested_window"]
         ]
     })
