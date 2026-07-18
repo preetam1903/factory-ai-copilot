@@ -369,7 +369,7 @@ class TrendAgent:
 
         if (
             requested_trend == "Declining"
-            and planning_impact == "Stable"
+            and planning_impact == "Low"
             and gap > 7
         ):
 

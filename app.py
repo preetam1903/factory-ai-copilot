@@ -300,7 +300,7 @@ if st.button("Start Investigation"):
 
     c7.metric(
         "Planning Impact",
-        trend["plan_status"]
+        trend["plan_impact"]
     )
 
     c8.metric(
