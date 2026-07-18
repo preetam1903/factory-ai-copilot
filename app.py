@@ -392,9 +392,9 @@ if st.button("Start Investigation"):
 
         downtime_df=service.shift_report,
 
-        start_date=context["requested_window"]["start_week"],
+        start_date=context["requested_window"]["start_date"],
 
-        end_date=context["requested_window"]["end_week"],
+        end_date=context["requested_window"]["end_date"],
 
         production_rate_tph=250
 
