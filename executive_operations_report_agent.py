@@ -80,9 +80,9 @@ Use only the supplied evidence.
                     "content": prompt
                 }
 
-            ],
+            ]
 
-            temperature=0.2
+            
 
         )
 

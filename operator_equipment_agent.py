@@ -61,8 +61,8 @@ Return ONLY JSON.
                     "role": "user",
                     "content": prompt
                 }
-            ],
-            temperature=0
+            ]
+            
         )
 
         try:
