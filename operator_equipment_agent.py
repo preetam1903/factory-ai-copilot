@@ -122,7 +122,11 @@ Return ONLY JSON.
 
                 "duration_minutes": float(row["Duration (min)"]),
 
-                "description": row["Operator Remarks"],
+                "description": (
+                    str(row["Operator Remarks"])
+                    if pd.notna(row["Operator Remarks"])
+                    else ""
+                ),
 
                 "event_type": (
                     row["Event Type"]
@@ -146,9 +150,11 @@ Return ONLY JSON.
                     else event.get("production_impact", "Unknown")
                 ),
 
-                "root_cause": event.get(
-                    "root_cause",
-                    ""
+                "root_cause": (
+                    row["Operator Remarks"]
+                    if pd.notna(row["Operator Remarks"])
+                    and str(row["Operator Remarks"]).strip() != ""
+                    else event.get("root_cause", "")
                 ),
 
                 "corrective_action": event.get(
