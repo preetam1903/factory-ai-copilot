@@ -109,6 +109,117 @@ class OperationsCorrelationAgent:
 
         ]
 
+                # -----------------------------
+        # Downtime Intelligence
+        # -----------------------------
+        downtime_intelligence = {
+
+            "total_hours": downtime["total_downtime"],
+
+            "planned_hours": downtime["planned_downtime"],
+            "planned_percentage": downtime["planned_percentage"],
+
+            "unplanned_hours": downtime["unplanned_downtime"],
+            "unplanned_percentage": downtime["unplanned_percentage"]
+
+        }
+
+        #######Intelligence
+        # -----------------------------
+        shift_intelligence = {}
+
+        total_hours = downtime["total_downtime"]
+
+        for shift, hours in downtime["downtime_by_shift"].items():
+
+            percentage = (
+                round((hours / total_hours) * 100, 1)
+                if total_hours > 0 else 0
+            )
+
+            shift_intelligence[shift] = {
+
+                "hours": round(hours, 2),
+
+                "percentage": percentage
+
+            }
+
+                # -----------------------------
+        # Equipment Intelligence
+        # -----------------------------
+        equipment_intelligence = {}
+
+        for equipment, hours in downtime["downtime_by_equipment"].items():
+
+            percentage = (
+                round((hours / total_hours) * 100, 1)
+                if total_hours > 0 else 0
+            )
+
+            equipment_intelligence[equipment] = {
+
+                "hours": round(hours, 2),
+
+                "percentage": percentage
+
+            }
+
+                # -----------------------------
+        # Trend Intelligence
+        # -----------------------------
+        investigation_total = downtime["total_downtime"]
+
+        reference_total = downtime_result["reference"]["total_downtime"]
+
+        if reference_total > 0:
+
+            change_hours = round(
+                investigation_total - reference_total,
+                2
+            )
+
+            change_percentage = round(
+                ((investigation_total - reference_total) / reference_total) * 100,
+                1
+            )
+
+        else:
+
+            change_hours = investigation_total
+            change_percentage = 100.0 if investigation_total > 0 else 0
+
+        if change_percentage >= 20:
+            trend_status = "Significant Increase"
+
+        elif change_percentage >= 5:
+            trend_status = "Increase"
+
+        elif change_percentage <= -20:
+            trend_status = "Significant Reduction"
+
+        elif change_percentage <= -5:
+            trend_status = "Reduction"
+
+        else:
+            trend_status = "Stable"
+
+        trend_intelligence = {
+
+            "investigation_hours": round(investigation_total, 2),
+
+            "reference_hours": round(reference_total, 2),
+
+            "change_hours": change_hours,
+
+            "change_percentage": change_percentage,
+
+            "status": trend_status
+
+        }
+
+
+
         return {
 
             "critical_equipment": critical_equipment,
@@ -127,6 +238,13 @@ class OperationsCorrelationAgent:
 
             "findings": findings,
 
-            "evidence": evidence
+            "evidence": evidence,
+
+            "downtime_intelligence": downtime_intelligence,
+            "shift_intelligence": shift_intelligence,
+            "equipment_intelligence": equipment_intelligence,
+            "trend_intelligence": trend_intelligence
 
         }
+
+               

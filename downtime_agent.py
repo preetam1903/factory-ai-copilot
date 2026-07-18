@@ -49,6 +49,16 @@ class DowntimeAgent:
         ].sum()
 
         # ----------------------------------------
+# Downtime Percentages
+# ----------------------------------------
+        if total_dt > 0:
+            planned_pct = round((planned_dt / total_dt) * 100, 1)
+            unplanned_pct = round((unplanned_dt / total_dt) * 100, 1)
+        else:
+            planned_pct = 0
+            unplanned_pct = 0
+
+        # ----------------------------------------
         # Downtime By Shift
         # ----------------------------------------
         downtime_by_shift = (
@@ -99,10 +109,19 @@ class DowntimeAgent:
             "Downtime Hrs"
         ].sum()
 
+        
+
         ref_unplanned = reference.loc[
             reference["Event Type"] == "Unplanned",
             "Downtime Hrs"
         ].sum()
+
+        if ref_total > 0:
+            ref_planned_pct = round((ref_planned / ref_total) * 100, 1)
+            ref_unplanned_pct = round((ref_unplanned / ref_total) * 100, 1)
+        else:
+            ref_planned_pct = 0
+            ref_unplanned_pct = 0
 
         # ----------------------------------------
         # Executive Summary
@@ -122,7 +141,10 @@ class DowntimeAgent:
 
                 "total_downtime": round(total_dt, 2),
                 "planned_downtime": round(planned_dt, 2),
+                "planned_percentage": planned_pct,
+
                 "unplanned_downtime": round(unplanned_dt, 2),
+                "unplanned_percentage": unplanned_pct,
 
                 "downtime_by_shift": downtime_by_shift,
                 "downtime_by_department": downtime_by_department,
@@ -135,7 +157,10 @@ class DowntimeAgent:
 
                 "total_downtime": round(ref_total, 2),
                 "planned_downtime": round(ref_planned, 2),
+                "planned_percentage": ref_planned_pct,
+
                 "unplanned_downtime": round(ref_unplanned, 2),
+                "unplanned_percentage": ref_unplanned_pct,
 
             }
 
