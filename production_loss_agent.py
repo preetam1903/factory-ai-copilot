@@ -14,6 +14,11 @@ class ProductionLossAgent:
         df = downtime_df.copy()
 
         # ---------------------------------------
+        # Ensure DATE is datetime
+        # ---------------------------------------
+        df["DATE"] = pd.to_datetime(df["DATE"])
+
+        # ---------------------------------------
         # Downtime Hours
         # ---------------------------------------
         df["Downtime Hrs"] = df["Duration (min)"] / 60
@@ -56,7 +61,7 @@ class ProductionLossAgent:
         # Loss by Shift
         # ---------------------------------------
         loss_by_shift = (
-            df.groupby("Shift")["Production Loss (t)"]
+            df.groupby("SHIFT")["Production Loss (t)"]
             .sum()
             .sort_values(ascending=False)
             .round(2)
@@ -72,8 +77,8 @@ class ProductionLossAgent:
                 ascending=False
             )[
                 [
-                    "Date",
-                    "Shift",
+                    "DATE",
+                    "SHIFT",
                     "Equipment",
                     "Operator Remarks",
                     "Duration (min)",

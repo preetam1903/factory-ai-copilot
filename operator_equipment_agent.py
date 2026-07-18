@@ -9,9 +9,6 @@ class OperatorEquipmentAgent:
 
     def investigate(self, downtime_df):
 
-        events = []
-
-        # Build one prompt containing all operator remarks
         rows = []
 
         for idx, row in downtime_df.iterrows():
@@ -29,23 +26,21 @@ You are an experienced steel plant operations engineer.
 
 Analyse each operator remark independently.
 
-For every record return ONLY valid JSON.
-
-Return a JSON array.
+Return ONLY valid JSON.
 
 Schema:
 
 [
- {{
-   "id":0,
-   "equipment":"...",
-   "issue_category":"Mechanical/Electrical/Process/Material/Waiting/Maintenance/Quality/Utility/Unknown",
-   "severity":"Low/Medium/High/Critical",
-   "production_impact":"Low/Medium/High",
-   "root_cause":"...",
-   "corrective_action":"...",
-   "confidence":0.95
- }}
+  {{
+    "id":0,
+    "equipment":"...",
+    "issue_category":"Mechanical/Electrical/Process/Material/Waiting/Maintenance/Quality/Utility/Unknown",
+    "severity":"Low/Medium/High/Critical",
+    "production_impact":"Low/Medium/High",
+    "root_cause":"...",
+    "corrective_action":"...",
+    "confidence":0.95
+  }}
 ]
 
 Records:
@@ -56,9 +51,7 @@ Return ONLY JSON.
 """
 
         response = self.client.chat.completions.create(
-
             model="gpt-4.1",
-
             messages=[
                 {
                     "role": "system",
@@ -69,23 +62,15 @@ Return ONLY JSON.
                     "content": prompt
                 }
             ],
-
             temperature=0
-
         )
 
         try:
-
             events = json.loads(response.choices[0].message.content)
-
         except Exception:
-
             events = []
 
         return {
-
             "summary": f"AI analysed {len(events)} operational events.",
-
             "events": events
-
         }
