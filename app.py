@@ -71,23 +71,24 @@ if st.button("Start Investigation"):
 
     st.success("Business context established")
 
-    st.markdown(f"""
-### Business Question
+    st.markdown("### Investigation Context")
 
-{context["business_question"]}
+    context_df = pd.DataFrame({
+        "Field": [
+            "Business Question",
+            "Objective",
+            "Trend Window",
+            "Investigation Window"
+        ],
+        "Value": [
+            context["question"],
+            context["objective"],
+            context["analysis_window"],
+            context["requested_window"]
+        ]
+    })
 
-### Objective
-
-{context["objective"]}
-
-### Trend Window
-
-{context["trend_window"]}
-
-### Requested Investigation
-
-{context["requested_window"]}
-""")
+st.table(context_df)
 
     # ---------------------------------------------------------
     # TREND AGENT
@@ -331,44 +332,30 @@ if st.button("Start Investigation"):
         use_container_width=True
     )
 
-    st.subheader("4. Key Findings")
+    with st.expander("Investigation Details"):
 
-    findings = []
+        st.markdown("### Deterministic Investigation Findings")
 
-    findings.append(
-        f"Production achievement during Weeks {requested['start_week']}-{requested['end_week']} was {trend['achievement']:.1f}%."
-    )
+        for finding in trend["findings"]:
+            st.write("•", finding)
 
-    findings.append(
-        f"Largest deterioration occurred in Week {trend['largest_drop']['week']} ({trend['largest_drop']['change']:.1f}%)."
-    )
+        st.markdown("---")
 
-    findings.append(
-        f"Overall production pattern indicates a {trend['overall_pattern'].lower()}."
-    )
+        st.markdown("### Investigation Facts")
 
-    if trend["recovery_detected"]:
-
-        findings.append(
-            f"Production recovery started in Week {trend['recovery_start']}."
+        facts_df = pd.DataFrame(
+            trend["trend_facts"].items(),
+            columns=["Metric", "Value"]
         )
 
-    else:
-
-        findings.append(
-            "No production recovery has been detected."
-        )
-
-    for item in findings:
-
-        st.write("✅", item)
+        st.table(facts_df)
 
 
     # ---------------------------------------------------------
 # AI Investigation Interpretation
 # ---------------------------------------------------------
 
-    st.subheader("6. AI Investigation Interpretation")
+    st.header("Executive Investigation Report")
 
     reasoning_agent = TrendReasoningAgent(
         st.secrets["OPENAI_API_KEY"]
