@@ -72,17 +72,7 @@ class TrendAgent:
 
         investigation = summary.tail(investigation_weeks)
 
-        # --------------------------------------------------
-# Investigation Dates
-# --------------------------------------------------
 
-        start_date = self.service.production[
-            self.service.production["WEEK_NO"] == trend_start
-        ]["PROD_DATE"].min()
-
-        end_date = self.service.production[
-            self.service.production["WEEK_NO"] == latest_week
-        ]["PROD_DATE"].max()
 
         # --------------------------------------------------
 # Investigation Context
@@ -267,6 +257,18 @@ class TrendAgent:
         trend_start = int(
             investigation.iloc[0]["WEEK_NO"]
         )
+
+                # --------------------------------------------------
+# Investigation Dates
+# --------------------------------------------------
+
+        start_date = self.service.production[
+            self.service.production["WEEK_NO"] == trend_start
+        ]["PROD_DATE"].min()
+
+        end_date = self.service.production[
+            self.service.production["WEEK_NO"] == latest_week
+        ]["PROD_DATE"].max()
 
         # --------------------------------------------------
         # Previous Week Comparison
