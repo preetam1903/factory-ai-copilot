@@ -124,9 +124,10 @@ Return ONLY JSON.
 
                 "description": row["Operator Remarks"],
 
-                "event_type": event.get(
-                    "issue_category",
-                    "Unknown"
+                "event_type": (
+                    row["Event Type"]
+                    if pd.notna(row["Event Type"])
+                    else event.get("issue_category", "Unknown")
                 ),
 
                 "issue_category": event.get(
@@ -139,9 +140,10 @@ Return ONLY JSON.
                     "Unknown"
                 ),
 
-                "production_impact": event.get(
-                    "production_impact",
-                    "Unknown"
+                "production_impact": (
+                    row["Likely Impact"]
+                    if pd.notna(row["Likely Impact"])
+                    else event.get("production_impact", "Unknown")
                 ),
 
                 "root_cause": event.get(
