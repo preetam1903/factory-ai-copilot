@@ -8,6 +8,7 @@ from trend_agent import TrendAgent
 from operations_intelligence_agent import OperationsIntelligenceAgent
 from crime_scene_agent import CrimeSceneInvestigationAgent
 from trend_reasoning_agent import TrendReasoningAgent
+import pandas as pd
 
 
 
