@@ -177,43 +177,7 @@ if st.button("Start Investigation"):
         height=450
 
     )
-    st.subheader("5. Production Trend Evidence")
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
-
-    st.subheader("4. Key Findings")
-
-    findings = []
-
-    findings.append(
-        f"Production achievement during Weeks {requested['start_week']}-{requested['end_week']} was {trend['achievement']:.1f}%."
-    )
-
-    findings.append(
-        f"Largest deterioration occurred in Week {trend['largest_drop']['week']} ({trend['largest_drop']['change']:.1f}%)."
-    )
-
-    findings.append(
-        f"Overall production pattern indicates a {trend['overall_pattern'].lower()}."
-    )
-
-    if trend["recovery_detected"]:
-
-        findings.append(
-            f"Production recovery started in Week {trend['recovery_start']}."
-        )
-
-    else:
-
-        findings.append(
-            "No production recovery has been detected."
-        )
-
-    for item in findings:
-
-        st.write("✅", item)
+    
     ############
 
     st.subheader("1. Investigation Request")
@@ -359,6 +323,44 @@ if st.button("Start Investigation"):
         st.warning(
             "No production recovery detected."
         )
+
+    st.subheader("5. Production Trend Evidence")
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+    st.subheader("4. Key Findings")
+
+    findings = []
+
+    findings.append(
+        f"Production achievement during Weeks {requested['start_week']}-{requested['end_week']} was {trend['achievement']:.1f}%."
+    )
+
+    findings.append(
+        f"Largest deterioration occurred in Week {trend['largest_drop']['week']} ({trend['largest_drop']['change']:.1f}%)."
+    )
+
+    findings.append(
+        f"Overall production pattern indicates a {trend['overall_pattern'].lower()}."
+    )
+
+    if trend["recovery_detected"]:
+
+        findings.append(
+            f"Production recovery started in Week {trend['recovery_start']}."
+        )
+
+    else:
+
+        findings.append(
+            "No production recovery has been detected."
+        )
+
+    for item in findings:
+
+        st.write("✅", item)
 
     
 
