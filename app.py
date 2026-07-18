@@ -46,14 +46,14 @@ if st.button("Start Investigation"):
     # DATA VALIDATION
     # ---------------------------------------------------------
 
-    st.header("Data Validation")
+    #st.header("Data Validation")
 
-    validation = service.validate_weekly_data()
+    #validation = service.validate_weekly_data()
 
-    st.dataframe(
-        validation,
-        use_container_width=True
-    )
+    #st.dataframe(
+        #validation,
+        #use_container_width=True
+    #)
 
     # ---------------------------------------------------------
     # CONTEXT AGENT
@@ -100,15 +100,7 @@ if st.button("Start Investigation"):
 
     trend = trend_agent.investigate(context)
 
-    st.subheader("Trend Facts (Debug)")
-
-    st.json(trend["trend_facts"])
-
-    st.write("Question Type:", trend["question_type"])
-    st.write("Assumption:", trend["assumption"])
-    st.write("Assessment:", trend["assessment_status"])
-    st.write("Requested Trend:", trend["requested_trend"])
-    st.write("Overall Pattern:", trend["overall_pattern"])
+    
 
     chart = trend["chart"]
 
@@ -185,11 +177,43 @@ if st.button("Start Investigation"):
         height=450
 
     )
-
+    st.subheader("5. Production Trend Evidence")
     st.plotly_chart(
         fig,
         use_container_width=True
     )
+
+    st.subheader("4. Key Findings")
+
+    findings = []
+
+    findings.append(
+        f"Production achievement during Weeks {requested['start_week']}-{requested['end_week']} was {trend['achievement']:.1f}%."
+    )
+
+    findings.append(
+        f"Largest deterioration occurred in Week {trend['largest_drop']['week']} ({trend['largest_drop']['change']:.1f}%)."
+    )
+
+    findings.append(
+        f"Overall production pattern indicates a {trend['overall_pattern'].lower()}."
+    )
+
+    if trend["recovery_detected"]:
+
+        findings.append(
+            f"Production recovery started in Week {trend['recovery_start']}."
+        )
+
+    else:
+
+        findings.append(
+            "No production recovery has been detected."
+        )
+
+    for item in findings:
+
+        st.write("✅", item)
     ############
 
     st.subheader("1. Investigation Request")
@@ -233,17 +257,42 @@ if st.button("Start Investigation"):
 
     {trend["question_type"]}
 
-    **Assessment**
-
-    {trend["assessment_status"]}
     """
     )
+
+    st.subheader("2. Investigation Assessment")
+
+    if trend["assessment_status"] == "Supported":
+
+        st.success(
+            """
+    ### Verdict
+
+    ✅ The production data supports the user's assumption.
+
+    The requested production decline has been confirmed.
+
+    Proceed to operational investigation.
+    """
+        )
+
+    else:
+
+        st.warning(
+            """
+    ### Verdict
+
+    ⚠ The production data does not support the user's assumption.
+
+    Further operational investigation is currently not justified.
+    """
+        )
 
 
 
     ##############
 
-    st.subheader("2. Executive Trend Dashboard")
+    st.subheader("3. Investigation Evidence")
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -276,22 +325,22 @@ if st.button("Start Investigation"):
     c5, c6, c7, c8 = st.columns(4)
 
     c5.metric(
-        "Trend",
+        "Investigation Trend",
         trend["requested_trend"]
     )
 
     c6.metric(
-        "Pattern",
+        "Overall Pattern",
         trend["overall_pattern"]
     )
 
     c7.metric(
-        "Planning",
+        "Planning Impact",
         trend["plan_status"]
     )
 
     c8.metric(
-        "Severity",
+        "Investigation Severity",
         trend["severity"]
     )
     drop = trend["largest_drop"]
@@ -311,21 +360,7 @@ if st.button("Start Investigation"):
             "No production recovery detected."
         )
 
-    st.info(
-        trend["assessment"]
-    )
-
-    st.success(
-        f"""
-AI Recommendation
-
-The production decline started during
-{trend["recommended_window"]["label"]}
-
-The investigation should focus on this
-window instead of only the user selected period.
-"""
-    )
+    
 
      # ---------------------------------------------------------
 # OPERATIONS INTELLIGENCE
