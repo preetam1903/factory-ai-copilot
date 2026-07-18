@@ -93,10 +93,9 @@ Investigation Facts
                     "content": user_prompt
                 }
 
-            ],
+            ]
 
-            temperature=0.2
-
+            
         )
 
         return response.choices[0].message.content
