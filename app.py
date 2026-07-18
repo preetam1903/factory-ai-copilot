@@ -94,7 +94,7 @@ if st.button("Start Investigation"):
 
     st.markdown("---")
 
-    st.header("Step 2 : Production Trend Analysis")
+    st.header("Step 2 : Production Trend Investigation")
 
     trend_agent = TrendAgent()
 
@@ -192,7 +192,7 @@ if st.button("Start Investigation"):
     )
     ############
 
-    st.subheader("Investigation Context")
+    st.subheader("1. Investigation Request")
 
     requested = trend["investigation_period"]
     analysis = trend["analysis_period"]
@@ -221,11 +221,29 @@ if st.button("Start Investigation"):
     """
         )
 
+    st.success(
+    f"""
+    ### Investigation Summary
+
+    **Question**
+
+    {trend["question"]}
+
+    **Investigation Type**
+
+    {trend["question_type"]}
+
+    **Assessment**
+
+    {trend["assessment_status"]}
+    """
+    )
+
 
 
     ##############
 
-    st.subheader("Executive Trend Dashboard")
+    st.subheader("2. Executive Trend Dashboard")
 
     c1, c2, c3, c4 = st.columns(4)
 
