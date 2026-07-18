@@ -1,4 +1,7 @@
 import json
+import pandas as pd
+
+from datetime import timedelta
 from openai import OpenAI
 
 
@@ -94,6 +97,15 @@ Return ONLY JSON.
 
             row = downtime_df.loc[idx]
 
+            # Build event timestamps
+            event_time = pd.to_datetime(
+                f"{row['DATE']} {row['Time']}"
+            )
+
+            end_time = event_time + timedelta(
+                minutes=float(row["Duration (min)"])
+            )
+
             enriched_events.append({
 
                 "id": idx,
@@ -102,19 +114,30 @@ Return ONLY JSON.
 
                 "department": row["Department"],
 
-                "date": str(row["DATE"]),
+                "date": event_time.strftime("%Y-%m-%d"),
 
-                "start_time": str(row["Start Time"]),
+                "start_time": event_time.strftime("%H:%M:%S"),
 
-                "end_time": str(row["End Time"]),
+                "end_time": end_time.strftime("%H:%M:%S"),
 
-                "duration_minutes": row["Duration (min)"],
+                "duration_minutes": float(row["Duration (min)"]),
 
                 "description": row["Operator Remarks"],
 
-                "event_type": event.get("issue_category", "Unknown"),
+                "event_type": event.get(
+                    "issue_category",
+                    "Unknown"
+                ),
 
-                "severity": event.get("severity", "Unknown"),
+                "issue_category": event.get(
+                    "issue_category",
+                    "Unknown"
+                ),
+
+                "severity": event.get(
+                    "severity",
+                    "Unknown"
+                ),
 
                 "production_impact": event.get(
                     "production_impact",
@@ -131,9 +154,11 @@ Return ONLY JSON.
                     ""
                 ),
 
-                "confidence": event.get(
-                    "confidence",
-                    0
+                "confidence": float(
+                    event.get(
+                        "confidence",
+                        0
+                    )
                 )
 
             })
