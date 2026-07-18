@@ -1,276 +1,108 @@
 # ==========================================================
-# OPERATIONS INTELLIGENCE AGENT
+# OPERATIONS INTELLIGENCE ORCHESTRATOR
 # ==========================================================
-import json
 
-import streamlit as st
-
-from openai import OpenAI
-
-from production_service import ProductionService
+from downtime_agent import DowntimeAgent
+from production_loss_agent import ProductionLossAgent
+from operator_equipment_agent import OperatorEquipmentAgent
+from operations_correlation_agent import OperationsCorrelationAgent
+from executive_operations_report_agent import ExecutiveOperationsReportAgent
 
 
 class OperationsIntelligenceAgent:
 
-    def __init__(self):
+    def __init__(self, api_key):
 
-        self.service = ProductionService()
+        self.api_key = api_key
 
-        self.client = OpenAI(
-            api_key=st.secrets["OPENAI_API_KEY"]
+    def investigate(
+        self,
+        downtime_df,
+        start_date,
+        end_date,
+        production_rate_tph=250
+    ):
+
+        # =====================================================
+        # Stage 1
+        # Downtime Investigation
+        # =====================================================
+
+        downtime_agent = DowntimeAgent(downtime_df)
+
+        downtime_result = downtime_agent.investigate(
+            start_date=start_date,
+            end_date=end_date
         )
 
-    # =====================================================
-    # Stage 1
-    # Structured Extraction (No LLM)
-    # =====================================================
+        # =====================================================
+        # Stage 2
+        # Production Loss
+        # =====================================================
 
-    def extract_downtime(self, row):
+        production_agent = ProductionLossAgent(
+            production_rate_tph=production_rate_tph
+        )
 
-        event = {}
+        production_result = production_agent.investigate(
+            downtime_df
+        )
 
-        event["date"] = row["DATE"]
+        # =====================================================
+        # Stage 3
+        # Operator & Equipment Intelligence
+        # =====================================================
 
-        event["shift"] = row["SHIFT"]
+        operator_agent = OperatorEquipmentAgent(
+            self.api_key
+        )
 
-        event["planned"] = row.get("PLANNED", False)
+        operator_result = operator_agent.investigate(
+            downtime_df
+        )
 
-        event["start_time"] = row.get("START_TIME")
+        # =====================================================
+        # Stage 4
+        # Correlation
+        # =====================================================
 
-        event["end_time"] = row.get("END_TIME")
+        correlation_agent = OperationsCorrelationAgent()
 
-        event["duration_minutes"] = row.get("DURATION_MINUTES")
+        correlation_result = correlation_agent.investigate(
 
-        event["remarks"] = row.get("REMARKS", "")
+            downtime_result=downtime_result,
 
-        return event
+            production_loss_result=production_result,
 
-    # =====================================================
-    # Stage 2
-    # LLM Understanding
-    # =====================================================
+            operator_result=operator_result
 
-    def understand_operator(self, remarks):
+        )
 
-        if remarks is None:
+        # =====================================================
+        # Stage 5
+        # Executive Report
+        # =====================================================
 
-            remarks = ""
+        executive_agent = ExecutiveOperationsReportAgent()
 
-        prompt = f"""
-Analyse the following operator shift report.
+        executive_result = executive_agent.investigate(
+            correlation_result
+        )
 
-Operator Remarks
-
-----------------
-
-{remarks}
-
-----------------
-
-Extract the operational information.
-
-Return ONLY JSON.
-
-{{
-    "event_type":"",
-    "equipment":"",
-    "root_cause":"",
-    "corrective_action":"",
-    "severity":"",
-    "production_impact":"",
-    "confidence":0.0
-}}
-"""
-
-        ####################################################
-        # Replace this with your OpenAI call
-        ####################################################
-
-        try:
-
-            response = self.client.chat.completions.create(
-
-                model="gpt-5",
-
-                messages=[
-
-                    {
-                        "role": "system",
-                        "content": """
-        You are a senior Steel Manufacturing Operations Engineer.
-
-        Your job is to analyse manufacturing shift reports and
-        identify operational events that impacted production.
-
-        Return ONLY valid JSON.
-
-        Do not include markdown.
-
-        If information is missing, use empty strings.
-
-        Confidence must be between 0 and 1.
-        """
-                    },
-
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-
-                ],
-
-                response_format={"type": "json_object"}
-
-            )
-
-            result = json.loads(
-                response.choices[0].message.content
-            )
-
-        except Exception as e:
-
-            print(e)
-
-            result = {
-
-                "event_type": "",
-
-                "equipment": "",
-
-                "root_cause": "",
-
-                "corrective_action": "",
-
-                "severity": "Unknown",
-
-                "production_impact": "",
-
-                "confidence": 0.0
-
-            }
-
-        return result
-
-    # =====================================================
-    # Merge Structured + LLM
-    # =====================================================
-
-    def merge_event(self, structured, llm):
+        # =====================================================
+        # Final Output
+        # =====================================================
 
         return {
 
-            "date":
-                structured["date"],
+            "downtime": downtime_result,
 
-            "shift":
-                structured["shift"],
+            "production_loss": production_result,
 
-            "planned":
-                structured["planned"],
+            "operator_equipment": operator_result,
 
-            "start_time":
-                structured["start_time"],
+            "correlation": correlation_result,
 
-            "end_time":
-                structured["end_time"],
-
-            "duration_minutes":
-                structured["duration_minutes"],
-
-            "event_type":
-                llm["event_type"],
-
-            "equipment":
-                llm["equipment"],
-
-            "root_cause":
-                llm["root_cause"],
-
-            "corrective_action":
-                llm["corrective_action"],
-
-            "severity":
-                llm["severity"],
-
-            "production_impact":
-                llm["production_impact"],
-
-            "confidence":
-                llm["confidence"],
-
-            "remarks":
-                structured["remarks"]
+            "executive_report": executive_result
 
         }
-
-    # =====================================================
-    # Main Investigation
-    # =====================================================
-
-    def investigate(self, trend):
-
-        reports = self.service.shift_report.copy()
-
-        start_week = trend["recommended_window"]["start_week"]
-
-        end_week = trend["recommended_window"]["end_week"]
-
-        reports["WEEK_NO"] = (
-            reports["DATE"]
-            .dt.isocalendar()
-            .week.astype(int)
-        )
-
-        reports = reports[
-            (reports["WEEK_NO"] >= start_week)
-            &
-            (reports["WEEK_NO"] <= end_week)
-        ]
-
-        events = []
-
-        for _, row in reports.iterrows():
-
-            structured = self.extract_downtime(row)
-
-            llm = self.understand_operator(
-                structured["remarks"]
-            )
-
-            merged = self.merge_event(
-                structured,
-                llm
-            )
-
-            events.append(merged)
-
-        return {
-
-            "events": events
-
-        }
-
-
-# ==========================================================
-# TEST
-# ==========================================================
-
-if __name__ == "__main__":
-
-    trend = {
-
-        "recommended_window": {
-
-            "start_week": 23,
-
-            "end_week": 25
-
-        }
-
-    }
-
-    agent = OperationsIntelligenceAgent()
-
-    result = agent.investigate(trend)
-
-    print(json.dumps(result, indent=4, default=str))

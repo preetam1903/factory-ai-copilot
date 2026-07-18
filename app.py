@@ -376,24 +376,92 @@ if st.button("Start Investigation"):
 # OPERATIONS INTELLIGENCE
 # ---------------------------------------------------------
 
+    # ---------------------------------------------------------
+# OPERATIONS INTELLIGENCE
+# ---------------------------------------------------------
+
     st.markdown("---")
 
     st.header("Step 3 : Operations Intelligence")
 
-    operations_agent = OperationsIntelligenceAgent()
+    operations_agent = OperationsIntelligenceAgent(
+        st.secrets["OPENAI_API_KEY"]
+    )
 
     operations = operations_agent.investigate(
-        trend
+
+        downtime_df=service.shift_report,
+
+        start_date=context["requested_window"]["start_week"],
+
+        end_date=context["requested_window"]["end_week"],
+
+        production_rate_tph=250
+
     )
 
-    st.success(
-        "Operations Intelligence Completed"
+    st.success("Operations Intelligence Completed")
+
+# =====================================================
+# Executive Report
+# =====================================================
+
+    st.subheader("Executive Operations Report")
+
+    st.markdown(
+        operations["executive_report"]["report"]
     )
 
-    st.dataframe(
-        operations["events"],
-        use_container_width=True
-    )
+# =====================================================
+# Correlation Findings
+# =====================================================
+
+    st.subheader("Correlation Findings")
+
+    for finding in operations["correlation"]["findings"]:
+
+        st.write("•", finding)
+
+# =====================================================
+# Downtime
+# =====================================================
+
+    with st.expander("Downtime Investigation"):
+
+        st.json(
+            operations["downtime"]
+        )
+
+# =====================================================
+# Production Loss
+# =====================================================
+
+    with st.expander("Production Loss Investigation"):
+
+        st.json(
+            operations["production_loss"]
+        )
+
+# =====================================================
+# Operator Intelligence
+# =====================================================
+
+    with st.expander("Operator & Equipment Intelligence"):
+
+        st.dataframe(
+            operations["operator_equipment"]["events"],
+            use_container_width=True
+        )
+
+# =====================================================
+# Correlation
+# =====================================================
+
+    with st.expander("Operations Correlation"):
+
+        st.json(
+            operations["correlation"]
+        )
 
     # ---------------------------------------------------------
 # CRIME SCENE INVESTIGATION
