@@ -58,24 +58,20 @@ class CrimeSceneInvestigationAgent:
 
         for event in events:
 
-            text = (
-                str(event.get("event_type", "")) + " " +
-                str(event.get("equipment", "")) + " " +
-                str(event.get("description", ""))
-            ).lower()
+            event_type = str(event.get("event_type", "")).strip().lower()
 
-            ignore = False
+            production_impact = str(
+                event.get("production_impact", "")
+            ).strip().lower()
 
-            for keyword in ignore_keywords:
+    # Skip planned activities
+            if (
+                event_type == "planned"
+                or "planned" in production_impact
+            ):
+                continue
 
-                if keyword in text:
-
-                    ignore = True
-                    break
-
-            if not ignore:
-
-                equipment_events.append(event)
+            equipment_events.append(event)
 
         # ---------------------------------------
         # Rank by duration
