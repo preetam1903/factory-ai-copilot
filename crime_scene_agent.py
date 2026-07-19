@@ -89,6 +89,18 @@ class CrimeSceneInvestigationAgent:
 
         )
 
+        print("\n===== RANKED EVENTS =====")
+
+        for e in equipment_events:
+            print(
+                e["date"],
+                e["equipment"],
+                e["duration_minutes"],
+                e["event_type"]
+            )
+
+        print("=========================\n")
+    
         suspects = []
 
         for rank, event in enumerate(equipment_events[:3], start=1):
