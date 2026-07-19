@@ -151,6 +151,27 @@ class ProductionService:
             },
             inplace=True
         )
+        # ---------- Crime Scene Coil Dataset ----------
+
+        self.coil_operation_fact.rename(
+            columns={
+                "PROD_DATE": "DATE",
+                "COIL_WEIGHT_TON": "ACTUAL_TONNAGE",
+                "THICKNESS_MM": "THICKNESS",
+                "WIDTH_MM": "WIDTH"
+            },
+            inplace=True
+        )
+
+        self.coil_operation_fact["DATE"] = pd.to_datetime(
+            self.coil_operation_fact["DATE"]
+        )
+
+        self.coil_operation_fact["WEEK_NO"] = (
+            self.coil_operation_fact["DATE"]
+            .dt.isocalendar()
+            .week.astype(int)
+        )
 
         self.production["DATE"] = pd.to_datetime(
             self.production["DATE"]
