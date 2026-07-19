@@ -197,7 +197,7 @@ class CrimeSceneInvestigationAgent:
 
     def get_production_window(self, window):
 
-        production = self.service.production.copy()
+        production = self.service.coil_operation_fact.copy()
 
         production["DATE"] = pd.to_datetime(production["DATE"])
 
@@ -1449,6 +1449,11 @@ Do not state any hypothesis as fact unless supported by evidence.
         # ---------------------------------------
 
         production = self.get_production_window(window)
+        st.subheader("COIL DATASET")
+
+        st.write(production.columns.tolist())
+
+        st.dataframe(production.head(10))
 
         st.subheader("DEBUG 2 - Production Dataset")
 
