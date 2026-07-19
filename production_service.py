@@ -7,11 +7,14 @@ class ProductionService:
     def __init__(
         self,
         production_file="COIL_OPERATION_FACT_5W.xlsx",
+        coil_operation_fact="COIL_OPERATION_FACT.xlsx"
         plan_file="PRODUCTION_PLAN_5W.xlsx",
         shift_file="SHIFT_REPORT.xlsx",
     ):
 
         self.production_file = Path(production_file)
+        self.production_file = Path(coil_operation_fact)
+        
         self.plan_file = Path(plan_file)
         self.shift_file = Path(shift_file)
 
