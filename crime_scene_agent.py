@@ -264,6 +264,26 @@ class CrimeSceneInvestigationAgent:
 
         transition = {}
 
+    # ---------------------------------------
+    # Production Continuity
+    # ---------------------------------------
+
+        continuity = {
+
+            "before_coils": len(before),
+
+            "after_coils": len(after),
+
+            "same_grade": False,
+
+            "same_width": False,
+
+            "same_thickness": False,
+
+            "continuity_observation": ""
+
+        }
+
         columns = [
 
             "GRADE",
@@ -303,7 +323,229 @@ class CrimeSceneInvestigationAgent:
 
             }
 
+        # ---------------------------------------
+# Production Continuity Investigation
+# ---------------------------------------
+
+        try:
+
+            if len(before) > 0 and len(after) > 0:
+
+                if "GRADE" in before.columns:
+
+                    continuity["same_grade"] = (
+
+                        before["GRADE"].mode().iloc[0]
+
+                        ==
+
+                        after["GRADE"].mode().iloc[0]
+
+                    )
+
+                if "WIDTH" in before.columns:
+
+                    continuity["same_width"] = (
+
+                        before["WIDTH"].mode().iloc[0]
+
+                        ==
+
+                        after["WIDTH"].mode().iloc[0]
+
+                    )
+
+                if "THICKNESS" in before.columns:
+
+                    continuity["same_thickness"] = (
+
+                        before["THICKNESS"].mode().iloc[0]
+
+                        ==
+
+                        after["THICKNESS"].mode().iloc[0]
+
+                    )
+
+        except Exception:
+
+            pass
+
+
+# ---------------------------------------
+# Engineering Observation
+# ---------------------------------------
+
+        if (
+
+            continuity["same_grade"]
+
+            and
+
+            continuity["same_width"]
+
+            and
+
+            continuity["same_thickness"]
+
+        ):
+
+            continuity["continuity_observation"] = (
+
+                "Production resumed with similar dominant product characteristics."
+
+            )
+
+        else:
+
+            continuity["continuity_observation"] = (
+
+                "Production characteristics changed after restart. The available evidence alone cannot determine whether this was due to production scheduling, operational decisions, or normal manufacturing sequence."
+
+            )
+
+
+        transition["continuity"] = continuity
+
         return transition
+
+    # =====================================================
+# Build Production Narrative
+# =====================================================
+
+    def build_production_narrative(self, timeline_data, transitions):
+
+        narrative = []
+
+        before = timeline_data["before"]
+        during = timeline_data["during"]
+        after = timeline_data["after"]
+
+    # ---------------------------------------
+    # Production Quantity
+    # ---------------------------------------
+
+        narrative.append(
+
+            f"Production before incident : {len(before)} coils."
+
+        )
+
+        narrative.append(
+
+            f"Production during incident : {len(during)} coils."
+
+        )
+
+        narrative.append(
+
+            f"Production after restart : {len(after)} coils."
+
+        )
+
+    # ---------------------------------------
+    # Continuity Observation
+    # ---------------------------------------
+
+        continuity = transitions.get("continuity", {})
+
+        observation = continuity.get(
+
+            "continuity_observation",
+
+            "Production continuity could not be determined."
+
+        )
+
+        narrative.append(observation)
+
+    # ---------------------------------------
+    # Grade Transition
+    # ---------------------------------------
+
+        if "GRADE" in transitions:
+
+            narrative.append(
+
+                f"Grade transition observed : "
+                f"{transitions['GRADE']}"
+
+            )
+
+    # ---------------------------------------
+    # Width Transition
+    # ---------------------------------------
+
+        if "WIDTH" in transitions:
+
+            narrative.append(
+
+                f"Width transition observed : "
+                f"{transitions['WIDTH']}"
+
+            )
+
+    # ---------------------------------------
+    # Thickness Transition
+    # ---------------------------------------
+
+        if "THICKNESS" in transitions:
+
+            narrative.append(
+
+                f"Thickness transition observed : "
+                f"{transitions['THICKNESS']}"
+
+            )
+
+        return narrative
+
+
+    # =====================================================
+# Generate Investigation Hypotheses
+# =====================================================
+
+    def generate_hypotheses(self, suspect, transitions, reports):
+
+        hypotheses = []
+
+        # Equipment
+        hypotheses.append({
+            "title": "Equipment related issue",
+            "description": "Downtime may have originated from equipment degradation or failure.",
+            "supported_by": [],
+            "contradicted_by": [],
+            "confidence": "Unknown"
+        })
+
+        # Production Transition
+        hypotheses.append({
+            "title": "Production transition",
+            "description": "Downtime may be associated with a production changeover.",
+            "supported_by": [],
+            "contradicted_by": [],
+            "confidence": "Unknown"
+        })
+
+        # Maintenance
+        hypotheses.append({
+            "title": "Maintenance activity",
+            "description": "Downtime may be related to maintenance execution.",
+            "supported_by": [],
+            "contradicted_by": [],
+            "confidence": "Unknown"
+        })
+
+        # Operator
+        hypotheses.append({
+            "title": "Operational decision",
+            "description": "Downtime may have been influenced by operational actions.",
+            "supported_by": [],
+            "contradicted_by": [],
+            "confidence": "Unknown"
+        })
+
+        return hypotheses
 
 
     # =====================================================
@@ -316,6 +558,8 @@ class CrimeSceneInvestigationAgent:
         window,
         timeline_data,
         transitions,
+        production_narrative,
+        hypotheses,
         reports
     ):
 
@@ -347,12 +591,29 @@ class CrimeSceneInvestigationAgent:
             },
 
             "transitions": transitions,
+            "production_narrative": production_narrative,
+            "hypotheses": hypotheses,
 
             "operator_remarks":
-
                 reports["Operator Remarks"].dropna().tolist()
                 if "Operator Remarks" in reports.columns
-                else []
+                else [],
+
+            "investigation_questions": [
+
+                "Could this downtime have been prevented or reduced?",
+
+                "Does the production before and after the downtime support a production scheduling hypothesis?",
+
+                "Did production continue with the same operating conditions after restart?",
+
+                "Do operator remarks support or contradict the production evidence?",
+
+                "What evidence is missing to confirm or reject the leading hypothesis?",
+
+                "What improvements to future shift logs would improve future investigations?"
+
+            ]
 
         }
 
@@ -368,9 +629,43 @@ You are a Senior Steel Plant Investigation Engineer with more than 25 years of e
 You are performing a forensic reconstruction of an operational incident.
 
 Your responsibility is NOT to identify a guaranteed root cause.
+Review every supplied investigation hypothesis before forming any conclusion.
 
-Your responsibility is to reconstruct what happened, identify operational changes surrounding the incident, evaluate possible contributing factors, and recommend the next engineering investigations.
+For each hypothesis explain:
 
+• Evidence supporting it
+
+• Evidence contradicting it
+
+• Evidence still missing
+
+• Diagnostic confidence
+
+• Whether the hypothesis remains active or should be rejected.
+
+Do not jump directly to the final diagnosis.
+
+Your conclusion must be based only on evidence contained in the investigation context.
+
+Your primary responsibility is to investigate whether this downtime could potentially have been prevented or reduced using the available operational evidence.
+
+Think like an experienced manufacturing investigation engineer.
+
+Start with the hypothesis:
+
+"Could this downtime have been avoided?"
+
+Then investigate the evidence before, during and after the incident.
+
+If the available evidence supports the hypothesis, explain why.
+
+If the available evidence contradicts the hypothesis, clearly explain why.
+
+If the available evidence is insufficient, explicitly state that the diagnosis is inconclusive and explain what additional operational data would improve the investigation.
+
+Never guess.
+Never overstate certainty.
+Support every engineering opinion with available evidence.
 =========================================================
 INVESTIGATION DATA
 =========================================================
@@ -409,146 +704,193 @@ Specifically determine:
 REPORT FORMAT
 =========================================================
 
-# Executive Summary
+# 1. Executive Summary
 
-Provide a concise summary of the incident.
+Provide a concise executive summary of the operational incident.
 
----
+Include:
 
-# Incident Reconstruction
+• Equipment involved
 
-Describe the sequence of events before, during and after the operational disturbance.
+• Downtime duration
 
----
+• Overall operational impact
 
-# Production Before the Incident
-
-Summarize:
-
-• dominant products
-• production pattern
-• operating conditions
-• any unusual observations
+• Preliminary engineering assessment
 
 ---
 
-# Production During the Incident
+# 2. Timeline Reconstruction
+
+Reconstruct the complete sequence of events.
 
 Explain:
 
-• production interruption
-• equipment impact
-• production loss
-• operational observations
+• What happened before the incident
+
+• What happened during the incident
+
+• What happened after production restarted
+
+Use both production data and operator observations.
 
 ---
 
-# Production After Restart
+# 3. Production Narrative
 
-Describe:
-
-• production recovery
-• production mix after restart
-• whether production returned to the previous operating state
-
----
-
-# Product Transition Analysis
-
-Compare before vs after production.
-
-Comment on transitions in:
-
-• Grade
-• Thickness
-• Width
-• Product mix
-
-Highlight significant operational changes.
-
----
-
-# Operator Correlation
-
-Correlate operator remarks with the production timeline.
-
-Identify observations that support or contradict the production data.
-
----
-
-# Engineering Assessment
-
-Provide a balanced engineering interpretation.
+Review the supplied production narrative.
 
 Explain:
 
-• what evidence supports the assessment
+• Production continuity
 
-• what evidence is missing
+• Production recovery
 
-• possible operational explanations
+• Grade transition
 
-Never overstate certainty.
+• Width transition
 
----
+• Thickness transition
 
-# Possible Contributing Factors
-
-State factors that MAY have contributed.
-
-Use wording such as:
-
-• may indicate
-
-• may have contributed
-
-• could suggest
-
-• is consistent with
-
-Never state that a factor definitely caused the incident.
+Do not infer causes unless supported by evidence.
 
 ---
 
-# Recommended Next Investigation
+# 4. Investigation Hypotheses
 
-Recommend additional checks such as:
+Review EVERY supplied hypothesis individually.
 
-• maintenance history
+For EACH hypothesis provide:
 
-• alarm history
+### Hypothesis
 
-• hydraulic pressure
+### Evidence Supporting It
 
-• rolling force
+### Evidence Contradicting It
 
-• strip tracking
+### Missing Evidence
 
-• equipment inspection
+### Confidence
 
-• previous similar events
+High / Medium / Low
 
-=========================================================
-RULES
-=========================================================
+### Status
 
-Use ONLY the supplied investigation evidence.
+Choose one:
 
-Do NOT invent facts.
+• Active
 
-Do NOT fabricate numerical values.
+• Rejected
 
-Clearly distinguish facts from engineering interpretation.
+• Inconclusive
 
-If evidence is insufficient, explicitly state that.
+Do not skip any supplied hypothesis.
 
-Use professional steel manufacturing terminology.
+---
 
-Write in executive report style.
+# 5. Overall Evidence Assessment
 
-Use Markdown headings and bullet points.
+Summarize the strongest evidence available.
 
-The report should read like it was written by an experienced Operations Investigation Engineer rather than an AI assistant.
+Clearly distinguish:
+
+Evidence supported by production
+
+Evidence supported by operator remarks
+
+Evidence supported by incident history
+
+Evidence that is currently unavailable.
+
+---
+
+# 6. Avoidability Assessment
+
+Determine whether the downtime appears to be:
+
+• Potentially Avoidable
+
+• Potentially Unavoidable
+
+• Inconclusive
+
+Never claim certainty.
+
+Support every conclusion using evidence.
+
+If evidence is insufficient, explicitly state why.
+
+---
+
+# 7. Diagnostic Confidence
+
+Classify overall investigation confidence.
+
+Choose:
+
+• High
+
+• Medium
+
+• Low
+
+Explain why.
+
+Discuss:
+
+• Evidence quality
+
+• Missing operational information
+
+• Reliability of the current investigation.
+
+---
+
+# 8. Recommended Data Improvements
+
+Recommend additional operational information that would improve future investigations.
+
+Examples:
+
+• Detailed shift remarks
+
+• Maintenance findings
+
+• PLC alarms
+
+• Hydraulic pressure
+
+• Rolling force
+
+• Equipment inspection
+
+• Roll condition
+
+• Product transition reason
+
+• Defect observations
+
+Only recommend information that would improve diagnostic confidence.
+
+---
+
+# 9. Executive Conclusion
+
+Provide a balanced engineering conclusion.
+
+Clearly separate:
+
+Established facts
+
+Likely observations
+
+Possible contributing factors
+
+Investigation limitations
+
+Recommended next engineering actions
+
+Do not state any hypothesis as fact unless supported by evidence.
 """
 
         response = self.client.chat.completions.create(
@@ -1117,6 +1459,20 @@ The report should read like it was written by an experienced Operations Investig
 
         )
 
+        production_narrative = self.build_production_narrative(
+
+            timeline_data,
+
+            transitions
+
+        )
+
+        hypotheses = self.generate_hypotheses(
+            suspect,
+            transitions,
+            reports
+        )
+
         context = self.build_investigation_context(
 
             suspect,
@@ -1126,6 +1482,8 @@ The report should read like it was written by an experienced Operations Investig
             timeline_data,
 
             transitions,
+            production_narrative,
+            hypotheses,
 
             reports
 
