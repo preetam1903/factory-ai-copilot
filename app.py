@@ -400,6 +400,21 @@ if st.button("Start Investigation"):
 
     )
 
+    st.subheader("Shift Report Sent to Operations Agent")
+
+    st.dataframe(
+        service.shift_report[
+            [
+                "DATE",
+                "Equipment",
+                "Duration (min)",
+                "Event Type",
+                "Operator Remarks"
+            ]
+        ],
+        use_container_width=True
+    )
+
     st.success("Operations Intelligence Completed")
 
 # =====================================================
