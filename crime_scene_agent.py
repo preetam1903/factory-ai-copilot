@@ -225,10 +225,27 @@ class CrimeSceneInvestigationAgent:
 
     # If production timestamp is unavailable,
     # use DATE as a fallback.
+        # Build complete rolling timestamp
+
         production["TIMESTAMP"] = pd.to_datetime(
             production["DATE"].dt.strftime("%Y-%m-%d")
             + " "
-            + production["ROLLING_START"].astype(str)
+            + production["ROLLING_START"].astype(str),
+            errors="coerce"
+        )
+
+# Remove rows where timestamp could not be created
+        production = production.dropna(subset=["TIMESTAMP"])
+
+# Ensure both sides are datetime
+        production["TIMESTAMP"] = pd.to_datetime(production["TIMESTAMP"])
+        window["event_start"] = pd.to_datetime(window["event_start"])
+        window["event_end"] = pd.to_datetime(window["event_end"])
+
+        st.write("TIMESTAMP dtype:", production["TIMESTAMP"].dtype)
+        st.write("Sample timestamps")
+        st.dataframe(
+            production[["DATE", "ROLLING_START", "TIMESTAMP"]].head(10)
         )
 
         before = production[
