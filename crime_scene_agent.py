@@ -39,6 +39,9 @@ class CrimeSceneInvestigationAgent:
 
         ignore_keywords = [
 
+            
+            "planned",
+            "planned maintenance",
             "power",
             "electricity",
             "plant shutdown",
