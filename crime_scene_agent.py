@@ -226,7 +226,9 @@ class CrimeSceneInvestigationAgent:
     # If production timestamp is unavailable,
     # use DATE as a fallback.
         production["TIMESTAMP"] = pd.to_datetime(
-            production["DATE"]
+            production["DATE"].dt.strftime("%Y-%m-%d")
+            + " "
+            + production["ROLLING_START"].astype(str)
         )
 
         before = production[
@@ -1554,6 +1556,12 @@ Do not state any hypothesis as fact unless supported by evidence.
             print("-" * 40)
 
             print(attribute)
+
+            if attribute == "continuity":
+
+                print(values)
+
+                continue
 
             print("Before")
 
