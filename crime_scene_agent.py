@@ -233,14 +233,28 @@ class CrimeSceneInvestigationAgent:
             + production["ROLLING_START"].astype(str),
             errors="coerce"
         )
+        # Remove timezone information
+        production["TIMESTAMP"] = (
+            production["TIMESTAMP"]
+            .dt.tz_localize(None)
+        )
 
 # Remove rows where timestamp could not be created
         production = production.dropna(subset=["TIMESTAMP"])
 
 # Ensure both sides are datetime
         production["TIMESTAMP"] = pd.to_datetime(production["TIMESTAMP"])
-        window["event_start"] = pd.to_datetime(window["event_start"])
-        window["event_end"] = pd.to_datetime(window["event_end"])
+
+        
+        window["event_start"] = (
+            pd.to_datetime(window["event_start"])
+            .tz_localize(None)
+        )
+
+        window["event_end"] = (
+            pd.to_datetime(window["event_end"])
+            .tz_localize(None)
+        )
 
         st.write("TIMESTAMP dtype:", production["TIMESTAMP"].dtype)
         st.write("Sample timestamps")
