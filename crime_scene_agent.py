@@ -1435,6 +1435,9 @@ Do not state any hypothesis as fact unless supported by evidence.
 
         window = self.build_investigation_window(suspect)
 
+        st.subheader("DEBUG 1 - Investigation Window")
+        st.json(window)
+
         # ---------------------------------------
         # Load Shift Reports
         # ---------------------------------------
@@ -1446,6 +1449,17 @@ Do not state any hypothesis as fact unless supported by evidence.
         # ---------------------------------------
 
         production = self.get_production_window(window)
+
+        st.subheader("DEBUG 2 - Production Dataset")
+
+        st.write("Rows:", len(production))
+
+        st.write("Columns:")
+
+        st.write(production.columns.tolist())
+
+        st.dataframe(production.head(20))
+        
         timeline_data = self.split_production_timeline(
 
             production,
@@ -1453,11 +1467,31 @@ Do not state any hypothesis as fact unless supported by evidence.
             window
 
         )
+
+        st.subheader("DEBUG 3 - Timeline Split")
+
+        st.write("Before:", len(timeline_data["before"]))
+        st.write("During:", len(timeline_data["during"]))
+        st.write("After:", len(timeline_data["after"]))
+
+        st.write("Before Production")
+        st.dataframe(timeline_data["before"])
+
+        st.write("During Production")
+        st.dataframe(timeline_data["during"])
+
+        st.write("After Production")
+        st.dataframe(timeline_data["after"])
+        
         transitions = self.detect_transitions(
 
             timeline_data
 
         )
+
+        st.subheader("DEBUG 4 - Detected Transitions")
+
+        st.json(transitions)
 
         production_narrative = self.build_production_narrative(
 
@@ -1466,6 +1500,9 @@ Do not state any hypothesis as fact unless supported by evidence.
             transitions
 
         )
+        st.subheader("DEBUG 5 - Production Narrative")
+
+        st.write(production_narrative)
 
         hypotheses = self.generate_hypotheses(
             suspect,
