@@ -298,6 +298,10 @@ class CrimeSceneInvestigationAgent:
     # Before Incident
     # -----------------------------
 
+        # Show only last 10 coils before incident
+
+        before = before.tail(10)
+
         for _, row in before.iterrows():
 
             timeline.append({
@@ -372,6 +376,12 @@ class CrimeSceneInvestigationAgent:
     # -----------------------------
 
         if len(after):
+
+            first = True
+
+            # Show only first 10 coils after restart
+
+            after = after.head(10)
 
             first = True
 
