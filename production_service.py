@@ -13,7 +13,7 @@ class ProductionService:
     ):
 
         self.production_file = Path(production_file)
-        self.production_file = Path(coil_operation_fact)
+        self.coil_operation_fact_file = Path(coil_operation_fact)
         
         self.plan_file = Path(plan_file)
         self.shift_file = Path(shift_file)
@@ -111,6 +111,10 @@ class ProductionService:
         # Production
         self.production = pd.read_excel(
             self.production_file,
+            sheet_name="COIL_OPERATION_FACT"
+        )
+        self.coil_operation_fact = pd.read_excel(
+            self.coil_operation_fact_file,
             sheet_name="COIL_OPERATION_FACT"
         )
 
