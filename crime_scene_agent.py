@@ -1046,6 +1046,9 @@ The report should read like it was written by an experienced Operations Investig
 # ---------------------------------------
 
         suspects = self.rank_equipment_events(operations)
+        st.subheader("Crime Scene - Ranked Suspects")
+
+        st.json(suspects)
     
         if len(suspects) == 0:
 
