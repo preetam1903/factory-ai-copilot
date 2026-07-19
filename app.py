@@ -463,9 +463,10 @@ if st.button("Start Investigation"):
 
     with st.expander("Operator & Equipment Intelligence"):
 
-        st.dataframe(
-            operations["operator_equipment"]["events"],
-            use_container_width=True
+        st.write("Raw Events")
+
+        st.json(
+            operations["operator_equipment"]["events"]
         )
 
 # =====================================================
