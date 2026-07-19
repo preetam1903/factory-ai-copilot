@@ -511,17 +511,17 @@ if st.button("Start Investigation"):
 # Timeline
 # -----------------------------
 
-    st.subheader("Timeline")
+    st.subheader("Operational Reconstruction")
 
     for item in crime["timeline"]:
 
         st.markdown(
             f"""
-    **{item['time']}**
+    ### {item['icon']} {item['time']}
 
     **{item['title']}**
 
-    {item['description']}
+    {item['details']}
     """
         )
 
