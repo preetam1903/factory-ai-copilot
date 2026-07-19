@@ -42,7 +42,6 @@ class CrimeSceneInvestigationAgent:
             "power",
             "electricity",
             "plant shutdown",
-            "planned",
             "lunch",
             "break",
             "cleaning",
