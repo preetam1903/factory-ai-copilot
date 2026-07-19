@@ -286,6 +286,121 @@ class CrimeSceneInvestigationAgent:
 
         }
 
+    def build_operational_timeline(self, timeline_data, window):
+
+        timeline = []
+
+        before = timeline_data["before"].sort_values("TIMESTAMP")
+        during = timeline_data["during"].sort_values("TIMESTAMP")
+        after = timeline_data["after"].sort_values("TIMESTAMP")
+
+    # -----------------------------
+    # Before Incident
+    # -----------------------------
+
+        for _, row in before.iterrows():
+
+            timeline.append({
+
+                "time": row["TIMESTAMP"].strftime("%H:%M"),
+
+                "type": "before",
+
+                "icon": "▶",
+
+                "title": f"Coil {row['MAT_ID']}",
+
+                "details": (
+                    f"Grade: {row['GRADE']} | "
+                    f"{row['THICKNESS']} mm × "
+                    f"{row['WIDTH']} mm"
+                )
+
+            })
+
+        if len(before):
+
+            row = before.iloc[-1]
+
+            timeline[-1]["icon"] = "🔴"
+
+            timeline[-1]["title"] = (
+                f"LAST SUCCESSFUL COIL - {row['MAT_ID']}"
+            )
+
+    # -----------------------------
+    # Equipment Stop
+    # -----------------------------
+
+        timeline.append({
+
+            "time": window["event_start"].strftime("%H:%M"),
+
+            "type": "event",
+
+            "icon": "🚨",
+
+            "title": f"{window['equipment']} STOPPED",
+
+            "details":
+                f"Downtime : {window['duration_minutes']} min"
+
+        })
+
+    # -----------------------------
+    # During Downtime
+    # -----------------------------
+
+        for _, row in during.iterrows():
+
+            timeline.append({
+
+                "time": row["TIMESTAMP"].strftime("%H:%M"),
+
+                "type": "during",
+
+                "icon": "⚠",
+
+                "title": f"Coil {row['MAT_ID']}",
+
+                "details": "Produced during downtime"
+
+            })
+
+    # -----------------------------
+    # Restart
+    # -----------------------------
+
+        if len(after):
+
+            first = True
+
+            for _, row in after.iterrows():
+
+                timeline.append({
+
+                    "time": row["TIMESTAMP"].strftime("%H:%M"),
+
+                    "type": "after",
+
+                    "icon": "🟢" if first else "▶",
+
+                    "title":
+
+                        f"{'FIRST COIL AFTER RESTART - ' if first else 'Coil '}{row['MAT_ID']}",
+
+                    "details": (
+                        f"Grade: {row['GRADE']} | "
+                        f"{row['THICKNESS']} mm × "
+                        f"{row['WIDTH']} mm"
+                    )
+
+                })
+
+                first = False
+
+        return timeline
+
     # =====================================================
 # Detect Production Transitions
 # =====================================================
@@ -1506,6 +1621,11 @@ Do not state any hypothesis as fact unless supported by evidence.
 
         )
 
+        operational_timeline = self.build_operational_timeline(
+            timeline_data,
+            window
+        )
+
         st.subheader("DEBUG 3 - Timeline Split")
 
         st.write("Before:", len(timeline_data["before"]))
@@ -1608,15 +1728,7 @@ Do not state any hypothesis as fact unless supported by evidence.
         # Build Timeline
         # ---------------------------------------
 
-        timeline = self.build_timeline(
-
-            event,
-
-            production,
-
-            reports
-
-        )
+        timeline = operational_timeline
 
         # ---------------------------------------
         # Build Evidence
