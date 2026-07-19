@@ -12,6 +12,26 @@ class OperatorEquipmentAgent:
 
     def investigate(self, downtime_df):
 
+        print("\n================ SHIFT REPORT RECEIVED =================")
+        print(downtime_df)
+        print("========================================================")
+
+        print("\nColumns:")
+        print(downtime_df.columns.tolist())
+
+        print("\nImportant fields:")
+        print(
+            downtime_df[
+                [
+                    "DATE",
+                    "Equipment",
+                    "Duration (min)",
+                    "Event Type",
+                    "Operator Remarks"
+                ]
+            ]
+        )
+
         rows = []
 
         # -----------------------------------------------------
