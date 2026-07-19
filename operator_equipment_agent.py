@@ -11,6 +11,13 @@ class OperatorEquipmentAgent:
         self.client = OpenAI(api_key=api_key)
 
     def investigate(self, downtime_df):
+        downtime_df = (
+            downtime_df
+            .sort_values("Duration (min)", ascending=False)
+            .reset_index(drop=True)
+        )
+
+        downtime_df["AI_ID"] = downtime_df.index
 
         print("\n================ SHIFT REPORT RECEIVED =================")
         print(downtime_df)
@@ -38,10 +45,10 @@ class OperatorEquipmentAgent:
         # Build input for AI
         # -----------------------------------------------------
 
-        for idx, row in downtime_df.iterrows():
+        for _, row in downtime_df.iterrows():
 
             rows.append({
-                "id": idx,
+                "id": int(row["AI_ID"]),
                 "equipment": row["Equipment"],
                 "department": row["Department"],
                 "duration_min": row["Duration (min)"],
@@ -99,6 +106,11 @@ Return ONLY JSON.
             ai_events = json.loads(
                 response.choices[0].message.content
             )
+
+            print("\n========== AI RESPONSE ==========")
+            print(json.dumps(ai_events, indent=2))
+            print("=================================\n")
+
         except Exception:
             ai_events = []
 
@@ -115,7 +127,9 @@ Return ONLY JSON.
             if idx is None or idx not in downtime_df.index:
                 continue
 
-            row = downtime_df.loc[idx]
+            row = downtime_df[
+                downtime_df["AI_ID"] == idx
+            ].iloc[0]
 
             # Build event timestamps
             event_time = pd.to_datetime(
@@ -128,7 +142,7 @@ Return ONLY JSON.
 
             enriched_events.append({
 
-                "id": idx,
+                "id": row["AI_ID"],
 
                 "equipment": row["Equipment"],
 
